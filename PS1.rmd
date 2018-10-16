@@ -1,20 +1,285 @@
 ---
 title: "Problem Set 1 Empirical Methods"
-output: html_notebook
+output: html_document
 author: Patrick Glettig , Carmine Raggone
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+```{r global options, include=FALSE}
+library(knitr)
+library(Cairo)
+library(extrafont)
+library(latex2exp)
+library(readstata13)
+library(Hmisc)
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
-```{r}
-plot(cars)
+sysinf <- Sys.info()
+if(sysinf['sysname'] == "Windows"){
+  extrafont::loadfonts(device="win")
+  #opts_chunk$set(dev = "CairoPDF")
+}
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+# Pencil and Paper Questions
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+# Computer Questions
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+## Empirical Exercise 1
+As questions (a) to (d) essentially ask the same but with different parameters, it makes sense to create a   function that does the calculation for us.
+  
+```{r}
+solveTask <- function(N=1,R=200){#define the default parameters as for the first task
+  library(ggplot2)#for the histogram
+  #Create empty DF first to be filled
+  samples <- data.frame(matrix(data=NA,nrow=R,ncol=N))
+  
+  for (i in 1:R){#R is number of replications
+    samples[i,] <- rexp(n=N) #N is observations of the exponential distribution
+  }
+  #Rename column names
+  names(samples) <- paste0('x_',1:N)
+  
+  samples['x_bar_avg']<-apply(samples,MARGIN = 1,FUN = mean)#calculate average per sample
+  
+  #Now we do the plot
+  plot <- ggplot(samples, aes(x=x_bar_avg)) +     geom_histogram(binwidth=0.1)+
+    theme(text = element_text(size=10, family="LM Roman 10"))+
+    ggtitle(paste0('Histogram with N=',N,'and R=',R))+
+    xlab(TeX('$\\bar{x}^r$'))+
+    ylab('Count')
+  x_bar <- mean(samples$x_bar_avg)
+  s_x_bar <- var(samples$x_bar_avg)
+  result <- list(plot,x_bar,s_x_bar)
+  names(result) <- c('Histogram','x_bar','s_x_bar')
+  return(result)
+}
+```
+Note that we can adress the asked solutions with the following code:
+```{r eval=FALSE}
+N1R200[1] #for the histogram
+N1R200[2] #for the sample average
+N1R200[3] #for the sample variance
 
+```
+
+  *a) Let $N = 1$ and $R = 200$. Calculate $\bar{x}^r$ for $r = 1, ...,200$ show them in a histogram. Also calculate the across-replication average, $x$, and sample variance, $s_{barx}$.*
+```{r}
+N1R200 <- solveTask(N=1,R=200)
+```
+  Where $\bar{x}^r= `r N1R200[2]`$ and $s_{barx}= `r N1R200[3]`$. This yields the following histogram:
+```{r echo=FALSE, results='hide'}
+N1R200[1]
+```
+  
+  *b) Let $N = 5$ and $R = 200$. Calculate $\bar{x}^r$ for $r = 1, ...,200$ show them in a histogram. Also calculate the across-replication average, $x$, and sample variance, $s_{barx}$.*
+```{r}
+N5R200 <- solveTask(N=5,R=200)
+```
+  Where $\bar{x}^r= `r N5R200[2]`$ and $s_{barx}= `r N5R200[3]`$. This yields the following histogram:
+```{r echo=FALSE, results='hide'}
+N5R200[1]
+```
+
+  *c) Let $N = 20$ and $R = 200$. Calculate $\bar{x}^r$ for $r = 1, ...,200$ show them in a histogram. Also calculate the across-replication average, $x$, and sample variance, $s_{barx}$.*
+```{r}
+N20R200 <- solveTask(N=20,R=200)
+```
+  Where $\bar{x}^r= `r N20R200[2]`$ and $s_{barx}= `r N20R200[3]`$. This yields the following histogram:
+```{r echo=FALSE, results='hide'}
+N20R200[1]
+```
+  
+  *d) Let $N = 1000$ and $R = 200$. Calculate $\bar{x}^r$ for $r = 1, ...,200$ show them in a histogram. Also calculate the across-replication average, $x$, and sample variance, $s_{barx}$.*
+```{r}
+N1000R200 <- solveTask(N=1000,R=200)
+```
+  Where $\bar{x}^r= `r N1000R200[2]`$ and $s_{barx}= `r N1000R200[3]`$. This yields the following histogram:
+```{r echo=FALSE, results='hide'}
+N1000R200[1]
+```
+  
+  *e) Based on your answers to the previous parts of this question,*
+  
+    *i. For each of $N = 1, N = 5, N = 20$, and $N = 1000$: Does the distribution of $\bar{x}^r$ look more like an exponential distribution or a normal distribution?*
+
+The plots above show that the higher $N$, the more the distribution of $\bar{x}^r$ looks like a normal distribution. As we are taking the sample average, extreme values are smoothed more the higher $N$.
+
+    *ii. Is your estimate of $\bar{x}$ close to $E(x_i) = 1$ in each experiment? If not, why not?*
+  
+```{r echo=FALSE}
+combined <- data.frame('N1' = c(N1R200[[2]],N1R200[[3]]),
+                       'N5' = c(N5R200[[2]],N5R200[[3]]),
+                       'N20' = c(N20R200[[2]],N20R200[[3]]),
+                       'N1000' = c(N1000R200[[2]],N1000R200[[3]]),
+                       row.names = c('x_bar','s_x_bar'))
+combined
+```
+We can see how $\bar{x}$ converges to $E(x_i) = 1$ the larger $N$. However, $s_{\bar{x}}$ becomes smaller the larger $N$. This is because extreme values carry less weight with a larger sample size. Hence, we observe a tendency to the middle. Therefore, we come closer to a normal distribution with $N~(0,1)$.
+
+    *iii. Is your estimate of $s_{\bar{x}}$ close to $V(x_i) = 1$ in each experiment? If not, why not?*
+
+The table above shows the convergence of $s_{\bar{x}}$ towards 0 as $N$ increases. The underlying effect is the same as above: extreme values carry less weight, ${\bar{x}}^r$ are closer to each other, variance is reduced.
+
+## Empirical Exercise 2
+  *a) Download the data and import them into Stata or R. How many observations are there?*
+
+```{r}
+smoke <- read.dta13('smoke.dta')
+dim(smoke) #dim() returns the dimensions of the dataframe.
+```
+There are `r dim(smoke)[1]` observations and `r dim(smoke)[2]` variables.
+
+  *b) Provide a table of summary statistics for the variables cigs, educ, age, income, white, restaurn. Briefly describe patterns you find particularly interesting (if any).*
+
+```{r}
+summary(smoke[,c('cigs', 'educ', 'age', 'income', 'white', 'restaurn')])
+
+```
+
+* *cigs*: With a median of 0, the majority of the sample does not smoke, however, it seams that the ones who smoke have a high daily cigarette consumption as indicated by the 3rd quantile.
+* *educ*: There is nobody in the sample that does not have any school education, we would need to check if this is a representative sample then, asking the question if everyone in the population received an education. The mean and median values seam quite reasonable.
+* *age*: A minimum age of 17 seems really low, based on personal experience, people start smoking earlier.
+* *income*: It is questionable if in a representative sample, the minimum income is 500. It would surprise if the lowest income might be lower if not zero.
+* *white*: with a mean of 0.88, a large fraction of the sample is white. This is a clear hint of a selection bias of the sample. Also, we might as well want to include other ethnicities if possible.
+* *restaurn*: Most of the restaurants do not seem to forbid smoking. This is ok because in reality it is not normally distributed.
+
+  *c) We want to estimate the relationship between number of cigarettes smoked and education, measured as i’s years of schooling.*
+$$cigs_i = \beta_0 +\beta_1 educ_i + \epsilon_i$$
+    
+    *i. Compute $\beta_1$ and $\beta_0$.*
+  
+  $$\hat{\beta}_1=\frac{\sum{(x_i-\bar{x})(y_i-\bar{y})}}{\sum{(x_i-\bar{x})^2}}$$
+  
+```{r}
+beta_1 <- sum((smoke$educ-mean(smoke$educ))*(smoke$cigs-mean(smoke$cigs)))/sum((smoke$educ-mean(smoke$educ))^2)
+print(beta_1)
+
+beta_0 <- mean(smoke$cigs)-beta_1*mean(smoke$educ)
+print(beta_0)
+```
+    
+    *ii. Run the regression in equation $(2c)$ How do the computer’s estimates of $\beta_0$ and $\beta_1$ relate to the ones you have just computed?*
+ 
+```{r}
+my_lm <- lm(cigs ~ educ, data = smoke)
+my_lm$coefficients
+```
+
+The estimates do not differ, not surprising as they use the same formula.
+    
+    *iii. Suppose that Assumption 2 (Mean-zero error) is satisfied. How do you interpret the coefficient of $educ$? Is this a big or small effect?*
+
+A one-unit increase in $educ$ (school years), decreases daily cigarette consumption by 0.21. As the mean of $cigs$ is around 8.6, this is a `r (0.2185*12.47)/8.686`% decrease for an individual at the average number of school years (~12.5), a relatively large effect.
+
+    *iv. Using your estimates, predict the number of cigarettes consumed by i and denote this $\hat{cigs}$. In a graph, display both the scatterplot of cigarettes smoked against education and your regression line.*
+
+```{r}
+cigs_hat <- predict(my_lm)#Predict values
+print(head(cigs_hat))
+#Create Scatterplot with regression line
+ggplot(smoke, aes(x=educ, y=cigs)) +
+  theme(text = element_text(size=10, family="LM Roman 10"))+
+  geom_point() +    # Scatters
+  geom_smooth(method=lm, se=FALSE)+
+  ggtitle('Cigarettes smoked against education')
+```
+
+    *v. Now regress cigarettes on education without including a constant. Generate predicted values and add the new regression line to the previous graph. What changes compared to the earlier regression line? Do you think you should include a constant or not?*
+
+```{r}
+my_lm_no_constant <- lm(cigs ~ educ + 0, data = smoke)
+my_lm_no_constant$coefficients
+cigs_hat_no_constant <- fitted(my_lm_no_constant)#calculates the fitted y values, does same as predict.
+print(head(cigs_hat_no_constant))
+
+ggplot(smoke, aes(x=educ, y=cigs)) +
+  theme(text = element_text(size=10, family="LM Roman 10"),
+        legend.position = "bottom")+
+  geom_point() +    # Scatters
+  geom_smooth(method=lm, se=FALSE, color='blue')+
+  geom_smooth(method=lm,
+              formula = y ~ 0 + x, #remove constant
+              se=FALSE, color='red')+
+  ggtitle('Cigarettes smoked against education with (blue) and without constant (red)')
+```
+
+We can see that the relationship between $educ$ and $cigs$ changes from negative to positive, indicating that more years of education increase cigarette consumption. By removing the constant, we would assume that the regression line goes through the origin, which is clearly not the case. Therefore it is important to include a constant.
+
+  *d) Now regress $cigs$ on $educ, age, age^2, white$ and $restaurant$ and assume again thatAssumption 2 (Mean-zero error) is satisfied.*
+
+$$cigs_i = \beta_0 +\beta_1 educ_i +\beta_2 age_i + \beta_3 {age_i}^2 + \beta_4 white_i + \beta_5 restaurant_i+ \epsilon_i$$
+```{r}
+third_lim <- lm(cigs ~ educ 
+                        +age
+                        +I(age^2)
+                        +white
+                        +restaurn,
+                data = smoke)
+```
+
+    *i. What are the coefficients of race (i.e. white) and of the dummy restaurant? How would you interpret them?*
+
+```{r}
+summary(third_lim) #gives us information about every coefficient
+```
+
+The coefficent of race, $white$, is `r summary(third_lim)$coefficients[5,1]`. This means that white people smoke on average `r summary(third_lim)$coefficients[5,1]` less cigarettes per day. However, the coefficient is not significant with a p-value of `r summary(third_lim)$coefficients[5,4]` and should therefore not be interpreted. On the contrary, the dummy $restaurant$ is highly significant with a p-value of `r summary(third_lim)$coefficients[6,4]`. On average, people living in states where smoking in restaurants is forbidden smoke `r summary(third_lim)$coefficients[4,1]` less per day.
+
+    *ii. Calculate the marginal effect of age on cigarette consumption. What is the value of this marginal effect at age 20? At age 40? At age 60?*
+
+First, one extracts the necessary coefficients from the model:
+```{r}
+linear_coef <- summary(third_lim)$coefficients[3,1]#extract linear coefficient
+squared_coef <- summary(third_lim)$coefficients[4,1]#extract squared coefficient
+```
+Then, to calculate the marginal effects, one needs to take the derivate with respect to age of the regression equation:
+$$cigs_i = \beta_0 +\beta_1 educ_i +\beta_2 age_i + \beta_3 {age_i}^2 + \beta_4 white_i + \beta_5 restaurant_i+ \epsilon_i$$
+$$\frac{\delta cigs_i}{\delta age}= \beta_2 + 2 \beta_3 age_i$$
+To implement this in R, one can first extract the coefficients $\beta_2$ and $\beta_3$ and then store the above derivate in a function to calculate the marginal effect at different ages:
+```{r}
+me_age <- function(age=1){
+  x <- linear_coef + 2*squared_coef*age
+  return(x)
+}
+me_age(20)
+me_age(40)
+me_age(60)
+```
+The marginal effect at age 20 is `r me_age(20)`, at 40 `r me_age(40)` and `r me_age(60)` at 60.
+
+    *iii. Predict the residuals from your model, $e_i = cigs_i - \hat{cigs_i}$, where $\hat{cigs_i}$ is the fitted value of $cigs_i$ from your regression.*
+
+```{r}
+head(third_lim$residuals)#calculates residuals. Only head otherwise too many observations.
+smoke$residi <- third_lim$residuals #add it to dataframe to plot
+```
+
+      *A. Construct a scatter plot of these residuals against age. What does this tell you about the likely validity of our Assumption 3?*
+  
+```{r}
+ggplot(smoke,aes(x=age,y=residi))+
+  theme(text = element_text(size=10, family="LM Roman 10"))+
+  geom_point()+
+  ggtitle('Residuals against age')
+```
+
+Assumption 3 states that the variance across residuals is constant. The plot clearly shows how the variance is larger between ages of 30 to 70, so there is an element of heteroskedasticity. It might be sensible to perform a formal test to verify if assumption 3 is fulfilled.
+
+      *B. Calculate the correlation of these residuals across individuals. What does this tell you about the likely validity of our Assumption 4?*
+
+```{r}
+cor(smoke$age,smoke$residi)
+```
+According to Assumption 4, the correlation should be 0. As the correlation is really small, we can be confident that this assumption is fulfilled.
+
+      *C. Plot the density of the residuals together with the density of a normal distribution. What does this tell you about the likely validity of our Assumption 5?*
+
+```{r}
+#add a "normal" series to benchmark:
+smoke$benchmark <- rnorm(807)
+ggplot(smoke)+
+    geom_density( aes(residi), color="blue")+
+    geom_density(aes(benchmark), color="red")+
+  theme(text = element_text(size=10, family="LM Roman 10"))+
+  ggtitle('Residual density (blue) versus normal distribution density (red)')
+```
+Assumption 5 stands for a normal distribution of the residuals. We can see that the distribution is far away from normal and hence the assumption is not fulfilled.

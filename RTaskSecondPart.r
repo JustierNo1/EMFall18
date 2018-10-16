@@ -36,7 +36,7 @@ fitted(my_lm_no_constant)#calculates the fitted y values, does same as predict.
 
 ggplot(smoke, aes(x=educ, y=cigs)) +
   geom_point() +    # Scatters
-  geom_smooth(method=lm, se=FALSE)+
+  geom_smooth(method=lm, se=FALSE, color='blue')+
   geom_smooth(method=lm,
               formula = y ~ 0 + x, #remove constant
               se=FALSE, color='red')
@@ -75,7 +75,7 @@ ggplot(smoke,aes(x=age,y=residi))+
 #residuals have shape, do not look random.
 #B: Calculate correlation
 acf(smoke$residi)[1]#gives correlation with lag 1
-cor(smoke$age,smoke$residi) #this correlation is really small, so we should be fine.
+cor(smoke$age,smoke$residi) #this correlation is really small, so we should be fine. It should be zero
 
 #C: Density plot residuals plus normal distribution
 #add a "normal" series to benchmark:
