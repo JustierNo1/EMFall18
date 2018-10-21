@@ -1,7 +1,10 @@
 ---
 title: "Problem Set 1 Empirical Methods"
-output: pdf_document
-author: Patrick Glettig , Carmine Raggone
+date: "21.10.2018"
+output: 
+  pdf_document: 
+  latex engine: xelatex
+author: Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)
 ---
 
 ```{r global options, include=FALSE}
@@ -13,6 +16,7 @@ library(readstata13)
 library(Hmisc)
 library(lmtest)
 library(stargazer)
+library(kableExtra)
 
 knitr::opts_chunk$set(echo = TRUE, fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,
                       fig.height = 2, fig.width = 4)
@@ -25,6 +29,173 @@ if(sysinf['sysname'] == "Windows"){
 ```
 
 # Pencil and Paper Questions
+## Exercise 1
+*(a) Write down the population regression function. Draw a picture of* $E(Y_{i}|X_{i})$, *the non-random part of the PRF.*
+
+Population Regression Function: 
+
+\begin{align*}
+Y_{i}&=E(Y_{i}|X_{i})+\epsilon_{i} \\ &=\beta_{1} + \beta_{2}X_{i}+\epsilon_{i} \\ &=3 + 1.5X_{i}+\epsilon_{i}
+\end{align*}
+
+```{r echo=FALSE, fig.width=5, fig.height=4, fig.align='center'}
+
+X<-c(1,4,3,2)
+Y<-c(4,10,9,7)
+b_1<-3
+b_2<-1.5
+{plot(X, Y, type='n')
+abline(b_1,b_2,col="red")}
+
+```
+
+*(b) Construct a table:*
+```{r echo=FALSE, results='asis'}
+N <- c(1,2,3,4)
+X <- c(1,4,3,2)
+Y <- c(4,10,9,7)
+mean_X <- rep(mean(X),4)
+mean_Y <- rep(mean(Y),4)
+x_i <- X-mean(X)
+y_i <- Y-mean(Y)
+x_iy_i <- x_i*y_i
+x_square_i <- (X-mean(X))^2
+table <- data.frame(N,X,Y,mean_X,mean_Y,x_i,y_i,x_iy_i,x_square_i)
+kable(table, header=FALSE)
+
+```
+
+*(c) Calculate OLS estimates:* $\widehat{\beta}_1, \widehat{\beta}_2$
+
+$$\widehat{\beta}_2 = \frac{\sum_{n=1}^N (x_i - \bar{x})(y_i - \bar{y})}{\sum{(x_i - \bar{x})^2}} = \frac{10}{2}= 2$$
+
+$$\widehat{\beta}_1=\bar{y}-\widehat{\beta}_2\bar{x}=7.5 - 2*2.5=2.5$$
+
+*(d) Plot the 4 points and OLS line*
+```{r echo=FALSE, fig.width=5, fig.height=4, fig.align='center'}
+
+X<-c(1,4,3,2)
+Y<-c(4,10,9,7)
+b_1<-3
+b_2<-1.5
+{plot(X, Y)
+abline(b_1,b_2,col="red")
+abline(2.5,2,col='blue')}
+
+```
+*(e) How does the OLS line compare to the line you drew from your Population Regression Function?*
+
+The lines are close to each other, however they are not the same. This is because of the residual part of the regression function. This results in a different intercept and different slope conditioned by the sample.
+
+*(f) Does your sample regression function cross the population regression function? Suppose you were to select another sample from the same population. Is it possible that the two lines would not cross? Why or why not?*
+
+Yes it does and the crossing point is in $P=(1,4.5)$ However, this is not always the case, in fact if we had another sample with $\widehat{\beta}_1=1.5$ and $\widehat{\beta}_2=4$ the line would not cross and this would not mean that it is not an estimate. As final remark the fitted OSL estimate of the PRF only depends on the sample we collect and if we had the possibility to draw an infinite sample the estimate and the real PRF would be identical.
+\newpage
+
+*(g) Calculate the error,* $\epsilon_i$, *for the data points in your sample. Also calculate the residuals,* $e_i$, *for these data points. Do the errors sum to zero? Do the residuals? Do your answers differ? If so, explain why in your own words.*
+
+**Errors:**
+
+\begin{align*}
+\epsilon_i=Y_i - E(X_i|Y_i)\\ \epsilon_i=Y_i-3-1.5X\\ \epsilon_i=(0.5,1,1.5,1)
+\end{align*}
+
+$$\sum \epsilon_i=4$$
+
+**Residuals:**
+
+\begin{align*}
+e_i=Y_i - \widehat{\beta}_1 -\widehat{\beta}_2X\\ e_i=Y_i-2.5-2X \\ e_i=(-0.5,-0.5,0.5,0.5)
+\end{align*}
+
+$$\sum e_i=0$$
+
+
+
+The residuals have to sum up to zero because the OLS estimates $\widehat\beta_1$ and $\widehat\beta_2$ are chosen to to make the residuals add up to zero. The fitted line is created in a way that it has the "same distance"" from every point of our sample. In fact, the residuals are defined as: $$e_i=y_i-\widehat\beta_1-\widehat\beta_2$$
+For the errors, they can sum up to any number as we cannot be sure of what the real $\beta_1$ and $\beta_2$ are, they are given by the true data generating process which we do not have.
+
+*(h) Show that* $\sum_{n=1}^4 (X_i - \bar{x})=0$ *Is this an idiosyncratic feature of this sample or would you expect it to hold in every sample?*
+
+$$\sum_{n=1}^4 (X_i - \bar{x}) = -1.5+1.5+0.5-0.5=0$$
+$$\sum(x_i - \bar{x}) = \sum X_i - n \bar{x}= \sum x_i - n \frac{1}{n} \sum x_i=0$$
+
+
+Given by the equation above we can see that this holds in every sample.
+
+*(i)Show that* $\sum{x_iy_i}=\sum{x_iY_i}$. *Also show that this equals* $\sum{X_iy_i}$ *Is this an idiosyncratic feature of this sample or would you expect it to hold in every sample?*
+
+\begin{align*}
+& \sum_{n=1}^N (X_i - \bar{x})(Y_i - \bar{y}) = 5.25+3.75+0.75+0.25 = 10 \\ &\sum_{n=1}^N (X_i - \bar{x})Y_i = -1.5(4)+1.5(10)+0.5(9)-0.5(7) =10 \\ &\sum_{n=1}^N (Y_i - \bar{y})X_i =-3.5(1)+2.5(4)+1.5(3)-0.5(2)=10
+\end{align*}
+
+This is not an idiosyncratic feature of this sample, but a general one. In fact, we can see that for the general cases is true that:
+\begin{align*} 
+\sum_{n=1}^N (X_i - \bar{x})(Y_i - \bar{y}) &= \sum_{n=1}^N (X_i - \bar{x})Y_i - \sum_{n=1}^N (X_i - \bar{x}) \bar{y}\\ &= \sum_{n=1}^N (X_i - \bar{x})Y_i - \bar{y}\sum_{n=1}^N (X_i - \bar{x}) \\ &= \sum_{n=1}^N (X_i - \bar{x})Y_i - \bar{y}*0 \\ &= \sum_{n=1}^N x_iY_i 
+\end{align*}
+
+and as well that: 
+\begin{align*}
+\sum_{n=1}^N (X_i - \bar{x})(Y_i - \bar{y}) &= \sum_{n=1}^N (Y_i - \bar{y})X_i - \sum_{n=1}^N (Y_i - \bar{y}) \bar{x}\\ &= \sum_{n=1}^N (Y_i - \bar{y})X_i - \bar{x}\sum_{n=1}^N (Y_i - \bar{y}) \\ &=  \sum_{n=1}^N (Y_i - \bar{y})X_i - \bar{x}*0 \\ &= \sum_{n=1}^N y_iX_i 
+\end{align*}
+
+This holds in every sample where the OLS assumptions hold. 
+
+## Exercise 2
+
+*Consider the simple linear regression model*
+$$y_i=\beta_1+\beta_2x_i+\epsilon_i$$
+
+*(a) Suppose that the unconditional expectation* $E(\epsilon_i)=\mu_{\epsilon} \neq 0$ *Using the formulas for* $\hat{\beta_1}$ *and* $\hat{\beta_2}$ *on slide 4 of the lecture notes, evaluate* $E(\hat{\beta_1})$ *and* $E(\hat{\beta_2})$. *What does your answer tell you about the robustness of OLS estimation to* $\epsilon_i$ *having a non-zero error?*
+
+Defined that
+\begin{align*}
+mxx=\sum_{n=1}^N (x_i-\bar{x})^2 \quad W_i=\frac{ (x_i-\bar{x})}{mxx} \quad v_i=(\frac{1}{n}-\bar{x} W_i)\end{align*}
+
+We can write the value of $\widehat\beta_2$ as follows:
+\begin{align*}
+\widehat{\beta}_2 &=\frac{\sum_{n=1}^N (x_i - \bar{x})(y_i - \bar{y})}{\sum_{n=1}^N(x_i - \bar{x})^2} = \sum_{n=1}^N \frac{(x_i - \bar{x})} {mxx}\bar{y} =  \sum_{n=1}^N W_iy_i
+\end{align*}
+
+Let's calculate the expected value of $\widehat\beta_2$:
+
+\begin{align*}
+E(\widehat{\beta}_2) &= E(\sum_{n=1}^N W_iy_i) \\ &= \sum_{n=1}^N W_i E(y_i) \\ &=  \sum_{n=1}^N W_i(\beta_1+\beta_2X_1+E(\epsilon_i)) \\ &=\beta_1\sum_{n=1}^N W_i+\beta_2\sum_{n=1}^N W_iX_1 +\sum_{n=1}^N W_iE(\epsilon_i)\\ &= \beta_1*0+\beta_2*1+\sum_{n=1}^NW_iE(\epsilon_i) \\ &= \beta_2 + \sum_{n=1}^N W_iE(\epsilon_i)
+\end{align*}
+
+As we just demonstrated $E(\beta_2)\neq \beta_2$. As $\beta_1=\bar{y}-\beta_2\bar{x}$, $E(\beta_1) \neq \beta_1$ which is telling us that the OLS estimation is not robust. 
+
+*Consider now the general CLRM with multiple regressors*
+
+$$y=X\beta+\epsilon$$
+*where* $\beta$ *includes the constant* $\beta_1$.
+
+*(b) Suppose you decided to measure all of your* $X$ *variables in different units such that your new* $X$ *variable, call it* $\tilde{X}$, *is exactly double your old one, i.e.* $\tilde{X} = 2X$. *Suppose you run the regression of* $y$ *on* $\tilde{X}$; *call the resulting estimate* $\tilde{\beta}$. *What is the relationship between* $\tilde{\beta}$ *and* $\hat{\beta}$, *the regular OLS estimator from the regression of* $y$ *on* $X$?
+
+If the measures of a variable are doubled the new estimate $\tilde{\beta}$ will have the same costant $\beta_1$, all the other estimates will be the half of $\widehat{\beta}$. This is true because $Y=\beta_1+\beta_2X+\epsilon_i=\beta_1+\frac{\beta_2}{2}(2*X)+\epsilon_i$ and the standard error will be also half.
+
+*c) Suppose you decided now to measure* $y$ *in different units such that your new y variable, call it* $y^*$, *is exactly double your old one, i.e.* $y^*=2*y$. *Suppose you run the regression of* $y^*$ *on* $X$; *call the resulting estimate* $\beta^*$. *What is the relationship between* $\beta^*$ *and* $\hat{\beta}$?
+
+If the dependent variable doubles, $\beta^*$ will exactly be double of $\hat{\beta}$:
+
+$$Y=X\beta+\epsilon$$
+$$2Y=2X\beta+2\epsilon$$
+
+*(d)Given your answers to the last two questions, how meaningful are the units in which* $X$ *and* $y$ *are measured for the conclusions you draw from an OLS regression?*
+
+
+Given the previous results, nature is indifferent to units of measurment, which means that there will be not inappropriate effects changing the units of the explanatory variable in a OLS regression model. Changes of units will not affect the goodness of fit of the model nor its accuracy. It will just change the units when you interprete the coefficients. Thus, the units in which X or Y are measured doesn't really matter.
+
+
+*(e) Return to the scenario in part (2b) above with* $\tilde{X}=2X$.* Calculate* $V(\tilde{\beta})$. *What is the relationship between* $V(\tilde{\beta})$ *and* $V(\hat{\beta})$?
+
+The bigger X it gets, the smaller the variance. 
+$$V(\widehat{\beta})=\frac{1}{(\sum_{n=1}^N (x_i - \bar{x}))^4}\sum_{n=1}^N (x_i - \bar{x})^2V(Y_i)=\frac{\sigma^2}{\sum_{n=1}^N (x_i - \bar{x})^2}$$
+Given that 
+$$\tilde\beta=\frac{1}{2}\widehat\beta$$
+We have that 
+$$V(\tilde\beta)=V(\frac{1}{2}\widehat\beta)=\frac{1}{4}V(\widehat\beta)$$
+\newpage
 
 # Computer Questions
 
@@ -67,7 +238,7 @@ N1R200[3] #for the sample variance
 
 ```
 
-*a) Let *$N = 1$ and $R = 200$. *Calculate* $\bar{x}^r$ *for* $r = 1, ...,200$ *show them in a histogram. Also calculate the across-replication average,* $\bar{x}$ *, and sample variance,* $s_{barx}$.
+*(a) Let *$N = 1$ and $R = 200$. *Calculate* $\bar{x}^r$ *for* $r = 1, ...,200$ *show them in a histogram. Also calculate the across-replication average,* $\bar{x}$ *, and sample variance,* $s_{barx}$.
 
 ```{r}
 N1R200 <- solveTask(N=1,R=200)
@@ -78,7 +249,7 @@ Where $\bar{x}^r= `r N1R200[2]`$ and $s_{barx}= `r N1R200[3]`$. This yields the 
 N1R200[1]
 ```
   
-*b) Let *$N = 5$ and $R = 200$. *Calculate* $\bar{x}^r$ *for* $r = 1, ...,200$ *show them in a histogram. Also calculate the across-replication average,* $\bar{x}$ *, and sample variance,* $s_{barx}$.
+*(b) Let *$N = 5$ and $R = 200$. *Calculate* $\bar{x}^r$ *for* $r = 1, ...,200$ *show them in a histogram. Also calculate the across-replication average,* $\bar{x}$ *, and sample variance,* $s_{barx}$.
 
 ```{r}
 N5R200 <- solveTask(N=5,R=200)
@@ -89,7 +260,7 @@ Where $\bar{x}^r= `r N5R200[2]`$ and $s_{barx}= `r N5R200[3]`$. This yields the 
 N5R200[1]
 ```
 
-*c) Let *$N = 20$ and $R = 200$. *Calculate* $\bar{x}^r$ *for* $r = 1, ...,200$ *show them in a histogram. Also calculate the across-replication average,* $\bar{x}$ *, and sample variance,* $s_{barx}$.
+*(c) Let *$N = 20$ and $R = 200$. *Calculate* $\bar{x}^r$ *for* $r = 1, ...,200$ *show them in a histogram. Also calculate the across-replication average,* $\bar{x}$ *, and sample variance,* $s_{barx}$.
 ```{r}
 N20R200 <- solveTask(N=20,R=200)
 ```
@@ -98,7 +269,7 @@ Where $\bar{x}^r= `r N20R200[2]`$ and $s_{barx}= `r N20R200[3]`$. This yields th
 N20R200[1]
 ```
   
-*d) Let *$N = 200$ and $R = 200$. *Calculate* $\bar{x}^r$ *for* $r = 1, ...,200$ *show them in a histogram. Also calculate the across-replication average,* $\bar{x}$ *, and sample variance,* $s_{barx}$.
+*(d) Let *$N = 200$ and $R = 200$. *Calculate* $\bar{x}^r$ *for* $r = 1, ...,200$ *show them in a histogram. Also calculate the across-replication average,* $\bar{x}$ *, and sample variance,* $s_{barx}$.
 ```{r}
 N1000R200 <- solveTask(N=1000,R=200)
 ```
@@ -107,7 +278,7 @@ Where $\bar{x}^r= `r N1000R200[2]`$ and $s_{barx}= `r N1000R200[3]`$. This yield
 N1000R200[1]
 ```
   
-*e) Based on your answers to the previous parts of this question,*
+*(e) Based on your answers to the previous parts of this question,*
   
 *i. For each of* $N = 1, N = 5, N = 20$*, and* $N = 1000$: *Does the distribution of* $\bar{x}^r$ *look more like an exponential distribution or a normal distribution?*
 
@@ -121,17 +292,17 @@ combined <- data.frame('N1' = c(N1R200[[2]],N1R200[[3]]),
                        'N20' = c(N20R200[[2]],N20R200[[3]]),
                        'N1000' = c(N1000R200[[2]],N1000R200[[3]]),
                        row.names = c('x_bar','s_x_bar'))
-combined
+kable(combined, header=FALSE)
 ```
 
-We can see how $\bar{x}$ converges to $E(x_i) = 1$ the larger $N$. However, $s_{\bar{x}}$ becomes smaller the larger $N$. This is because extreme values carry less weight with a larger sample size. Hence, we observe a tendency to the middle. Therefore, we come closer to a normal distribution with $N~(0,1)$.
+We can see how $\bar{x}$ converges to $E(x_i) = 1$ the larger $N$. However, $s_{\bar{x}}$ becomes smaller the larger $N$. This is because extreme values carry less weight with a larger sample size. Hence, we observe a tendency to the middle. Therefore, we come closer to a normal distribution with $N \sim(0,1)$.
 
 *iii. Is your estimate of *$s_{\bar{x}}$ *close to* $V(x_i) = 1$* in each experiment? If not, why not?*
 
 The table above shows the convergence of $s_{\bar{x}}$ towards 0 as $N$ increases. The underlying effect is the same as above: extreme values carry less weight, ${\bar{x}}^r$ are closer to each other, variance is reduced. This comes from the central limit theorem.
 
 ## Empirical Exercise 2
-*a) Download the data and import them into Stata or R. How many observations are there?*
+*(a) Download the data and import them into Stata or R. How many observations are there?*
 
 ```{r results='hide'}
 smoke <- read.dta13('smoke.dta')
@@ -139,7 +310,7 @@ dim(smoke) #dim() returns the dimensions of the dataframe.
 ```
 There are `r dim(smoke)[1]` observations and `r dim(smoke)[2]` variables.
 
-*b) Provide a table of summary statistics for the variables cigs, educ, age, income, white, restaurn. Briefly describe patterns you find particularly interesting (if any).*
+*(b) Provide a table of summary statistics for the variables cigs, educ, age, income, white, restaurn. Briefly describe patterns you find particularly interesting (if any).*
 
 ```{r}
 summary(smoke[,c('cigs', 'educ', 'age', 'income', 'white', 'restaurn')])
@@ -148,12 +319,12 @@ summary(smoke[,c('cigs', 'educ', 'age', 'income', 'white', 'restaurn')])
 
 * *cigs*: With a median of 0, the majority of the sample does not smoke, however, it seams that the ones who smoke have a high daily cigarette consumption as indicated by the 3rd quantile.
 * *educ*: There is nobody in the sample that does not have any school education, we would need to check if this is a representative sample then, asking the question if everyone in the population received an education. The mean and median values seam quite reasonable.
-* *age*: A minimum age of 17 seems really low, based on personal experience, people start smoking earlier.
+* *age*: A minimum age of 17 seems really high, based on personal experience, people start smoking earlier.
 * *income*: It is questionable if in a representative sample, the minimum income is 500. It would surprise if the lowest income might be lower if not zero.
 * *white*: with a mean of 0.88, a large fraction of the sample is white. This is a clear hint of a selection bias of the sample. Also, we might as well want to include other ethnicities if possible.
 * *restaurn*: Most of the restaurants do not seem to forbid smoking. This is ok because in reality it is not normally distributed.
 
-*c) We want to estimate the relationship between number of cigarettes smoked and education, measured as i’s years of schooling.*
+*(c) We want to estimate the relationship between number of cigarettes smoked and education, measured as i’s years of schooling.*
 $$cigs_i = \beta_0 +\beta_1 educ_i + \epsilon_i$$
     
 *i. Compute* $\beta_1$ *and* $\beta_0$.
@@ -177,7 +348,7 @@ my_lm <- lm(cigs ~ educ, data = smoke)
 my_lm$coefficients
 ```
 
-The estimates do not differ, not surprising as they use the same formula.
+The estimates do not differ, not surprising as they use the same OLS formula.
     
 *iii. Suppose that Assumption 2 (Mean-zero error) is satisfied. How do you interpret the coefficient of $educ$? Is this a big or small effect?*
 
@@ -217,7 +388,7 @@ ggplot(smoke, aes(x=educ, y=cigs)) +
 
 We can see that the relationship between $educ$ and $cigs$ changes from negative to positive, indicating that more years of education increase cigarette consumption. By removing the constant, we would assume that the regression line goes through the origin, which is clearly not the case. Therefore it is important to include a constant.
 
-*d) Now regress* $cigs$ *on* $educ, age, age^2, white$ *and* $restaurant$ *and assume again that Assumption 2 (Mean-zero error) is satisfied.*
+*(d) Now regress* $cigs$ *on* $educ, age, age^2, white$ *and* $restaurant$ *and assume again that Assumption 2 (Mean-zero error) is satisfied.*
 
 $$cigs_i = \beta_0 +\beta_1 educ_i +\beta_2 age_i + \beta_3 {age_i}^2 + \beta_4 white_i + \beta_5 restaurant_i+ \epsilon_i$$
 ```{r}
@@ -272,7 +443,8 @@ smoke$residi <- third_lim$residuals #add it to dataframe to plot
 ggplot(smoke,aes(x=age,y=residi))+
   theme(text = element_text(size=10, family="LM Roman 10"))+
   geom_point()+
-  ggtitle('Residuals against age')
+  ggtitle('Residuals against age')+
+  labs(y='residuals')
 ```
 
 Assumption 3 states that the variance across residuals is constant. The plot clearly shows how the variance is larger between ages of 30 to 70, so there is an element of heteroskedasticity. It might be sensible to perform a formal test to verify if assumption 3 is fulfilled.
@@ -282,17 +454,18 @@ Assumption 3 states that the variance across residuals is constant. The plot cle
 ```{r}
 dwtest(third_lim)
 ```
-We can reject the $H_0$ that the autocorrelation among residuals is greater than 0. In other words, assumption 4 is fulfilled.
+We can reject the $H_1$ that the autocorrelation among residuals is greater than 0. In other words, assumption 4 is fulfilled.
 
 *C. Plot the density of the residuals together with the density of a normal distribution. What does this tell you about the likely validity of our Assumption 5?*
 
-```{r fig.align='center', fig.width=6.2}
+```{r fig.align='center',fig.height=1.9, fig.width=6.2}
 #add a "normal" series to benchmark:
 smoke$benchmark <- rnorm(807)
 ggplot(smoke)+
     geom_density( aes(residi), color="blue")+
     geom_density(aes(benchmark), color="red")+
   theme(text = element_text(size=10, family="LM Roman 10"))+
-  ggtitle('Residual density (blue) versus normal distribution density (red)')
+  ggtitle('Residual density (blue) versus normal distribution density (red)')+
+  labs(x='residuals')
 ```
 Assumption 5 stands for a normal distribution of the residuals. We can see that the distribution is far away from normal and hence the assumption is not fulfilled.
