@@ -2,7 +2,7 @@
 title: "Problem Set 2 Empirical Methods"
 date: "05.11.2018"
 output: 
-  pdf_document: 
+  html_document: 
   latex engine: xelatex
 author: Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)
 ---
@@ -27,3 +27,47 @@ if(sysinf['sysname'] == "Windows"){
   #opts_chunk$set(dev = "CairoPDF")
 }
 ```
+
+### 2. The gender wage gap
+
+*Suppose you want to test whether in your country women are discriminated against  relative to men in terms of wages. You decide that you want to test whether men and women have different salaries. Suppose you are able to gather data on the whole working population in your country. For each individual you have the following information.*
+
+* *monthly wage*
+* *gender*
+* *years of education*
+
+*(a) Suppose years of education have the same effect on wages for both men and women. Propose a simple regression model to test your hypothesis.*
+
+$$ Wage_i = \alpha + \beta_1Edu_i + \beta_2Male_i + \epsilon_i$$
+Where *Male* is a dummy variable which takes value 0 for females and 1 for male observations. 
+
+*(b) Provide a graphical representation of the conditional expectation function (i.e. the part of wages that we can explain with our covariates) and show if and how it differs for men and women.*
+
+$$E(W_i|Edu_i,Male_i)=\begin{cases}
+    \alpha + \beta_1Edu_i + \epsilon_i,& \text{if } Male_i = 0\\
+     \alpha  + \beta_1Edu_i + \beta_2 + \epsilon_i,& \text{if } Male_i = 1
+\end{cases}$$
+
+*(c) In retrospect, you decide that years of education might have a different marginal effect on men compared to women. How would you modify your regression model to account for this differential effect?*
+
+$$ Wage_i = \alpha + \beta_1Edu_i + \beta_2Male_i + \beta_3Edu_i \times Male_i + \epsilon_i $$
+
+*(d) Provide a graphical representation of the conditional expectation function (i.e. the part of wages that we can explain with our covariates) and show if and how it differs for men and women*
+$$E(W_i|Edu_i,Male_i)=\begin{cases}
+    \alpha + \beta_1Edu_i + \epsilon_i,& \text{if } Male_i = 0\\
+     \alpha  + \beta_1Edu_i + \beta_2 + \beta_3Edu_i + \epsilon_i,& \text{if } Male_i = 1
+\end{cases}$$
+
+## 2. Empirical Application
+**1. The Gender Wage Gap.** *In this exercise we will try to explore some discrimination theories analyzing a subsample from the US CPS2015. Many politicians, institutional observers, and researchers still claim today the existence of discrimination against female workers in the labor market. They base their claims looking at the gender wage gap, i.e. the difference between men’s and women’s wages. As many other things in
+economics, this wage gap can be generated both from the demand side (employers who discriminate against women) and from the supply side (women having different skills or preferences for specific jobs or for entering the labor market at all). In this exercise we will try to learn more about the gender wage gap, while testing you on your econometric toolkit. For this question, assume that Assumption 2 (Mean-zero Error) holds so that you can make causal statements in your answers.*
+
+*Download the dataset sampleUScens2015.csv from OLAT and import it into Stata or R. The dataset includes prime age individuals (i.e. *age $\in [25; 54]$) *active in the labor market (i.e. either employed or looking for job), and working in the private sector. There are seven relevant variables:*
+
+* *age*, the age of the individual in 2015
+* *education*, years of completed education
+* *incwage*, income from wages in 2015 in USD
+* *female*, dummy for female
+* *childrenly*, dummy if had a children in the last year
+* *degfield*, field of degree
+* *occupation*, sector of occupation
