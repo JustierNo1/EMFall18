@@ -2,8 +2,8 @@
 title: "Problem Set 2 Empirical Methods"
 date: "05.11.2018"
 output: 
-  pdf_document: 
-  latex engine: xelatex
+  html_document 
+  #latex engine: xelatex
 author: Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)
 ---
 
@@ -17,6 +17,9 @@ library(Hmisc)
 library(lmtest)
 library(stargazer)
 library(kableExtra)
+library(ggplot2)
+library(data.table)
+library(tidyr)
 
 knitr::opts_chunk$set(echo = TRUE, fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,
                       fig.height = 2, fig.width = 4)
@@ -26,4 +29,50 @@ if(sysinf['sysname'] == "Windows"){
   extrafont::loadfonts(device="win")
   #opts_chunk$set(dev = "CairoPDF")
 }
+```
+
+# Paper and Pencil Questions
+
+# Empirical Part
+
+At first we need to load the data in order to start our analysis:
+```{r}
+USCPS <- fread('sampleUScens2015.CSV')
+head(USCPS) # Check the format
+dim(USCPS) #Check length
+summary(USCPS) #Explore the data
+```
+The summary tells us that there are some NAs in $educ$, we want to explore this:
+```{r}
+head(USCPS[rowSums(is.na(USCPS)) > 0,])
+```
+The other columns seem fine, we could still keep these observations in the dataset. However, the data quality on these 45 observations seems poor anyway as $firmsector, occupation$ and $degfield$ are in most cases "other", which is not really informative. Also, 45 observations are just a tiny fraction of the overall sample. As it is easier to work with a complete dataframe, we drop the observations containing NAs:
+```{r results='hide'}
+USCPS <- USCPS %>% drop_na()
+```
+
+(a) *Generate a new variable called* $wage = incwage/1000$. *Also, generate* $lw$ *taking the log of wage. Generate a dummy named university which is equal to 1 if* $education \geq 16$. *First regress wage on education, then regress wage on education and the university dummy. How does the coefficient on education change? How do you interpret it in both specifications?*
+
+**Create the variables**
+```{r}
+USCPS$wage <- USCPS$incwage/1000 #create wage
+USCPS$lw <- log(USCPS$wage) #create log wage
+USCPS$university <- as.numeric(USCPS$educ >= 16) #create university dummy
+
+head(USCPS[university==1,])#and we quickly check if the dummy was created correctly
+```
+
+**Run the regressions**
+```{r results='asis'}
+model.1 <- lm(wage ~ educ, data = USCPS)
+model.2 <- lm(wage ~ educ + university, data = USCPS)
+#Currently this stargazer produces an error, I could not fix it now. If you have time it would be great if you could look into this.
+# stargazer(model.1, model.2, title="Regression Results",
+#  align=TRUE, dep.var.labels=c("Wage"),
+#  covariate.labels=c("Education","University x Education"),
+#  omit.stat=c("all"), no.space=TRUE, ci = TRUE)
+
+#Hence you can use this to look at the results
+summary(model.1)
+summary(model.2)
 ```
