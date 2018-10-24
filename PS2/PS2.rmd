@@ -37,13 +37,12 @@ if(sysinf['sysname'] == "Windows"){
 * *years of education*
 
 *(a) Suppose years of education have the same effect on wages for both men and women. Propose a simple regression model to test your hypothesis.*
-
 $$ Wage_i = \alpha + \beta_1Edu_i + \beta_2Male_i + \epsilon_i$$
 Where *Male* is a dummy variable which takes value 0 for females and 1 for male observations. 
 
 *(b) Provide a graphical representation of the conditional expectation function (i.e. the part of wages that we can explain with our covariates) and show if and how it differs for men and women.*
 
-$$E(W_i|Edu_i,Male_i)=\begin{cases}
+$$E(Wage_i|Edu_i,Male_i)=\begin{cases}
     \alpha + \beta_1Edu_i + \epsilon_i,& \text{if } Male_i = 0\\
      \alpha  + \beta_1Edu_i + \beta_2 + \epsilon_i,& \text{if } Male_i = 1
 \end{cases}$$
@@ -53,7 +52,7 @@ $$E(W_i|Edu_i,Male_i)=\begin{cases}
 $$ Wage_i = \alpha + \beta_1Edu_i + \beta_2Male_i + \beta_3Edu_i \times Male_i + \epsilon_i $$
 
 *(d) Provide a graphical representation of the conditional expectation function (i.e. the part of wages that we can explain with our covariates) and show if and how it differs for men and women*
-$$E(W_i|Edu_i,Male_i)=\begin{cases}
+$$E(Wage_i|Edu_i,Male_i)=\begin{cases}
     \alpha + \beta_1Edu_i + \epsilon_i,& \text{if } Male_i = 0\\
      \alpha  + \beta_1Edu_i + \beta_2 + \beta_3Edu_i + \epsilon_i,& \text{if } Male_i = 1
 \end{cases}$$
