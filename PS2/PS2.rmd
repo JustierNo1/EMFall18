@@ -1,0 +1,29 @@
+---
+title: "Problem Set 2 Empirical Methods"
+date: "05.11.2018"
+output: 
+  pdf_document: 
+  latex engine: xelatex
+author: Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)
+---
+
+```{r global options, include=FALSE}
+library(knitr)
+library(Cairo)
+library(extrafont)
+library(latex2exp)
+library(readstata13)
+library(Hmisc)
+library(lmtest)
+library(stargazer)
+library(kableExtra)
+
+knitr::opts_chunk$set(echo = TRUE, fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,
+                      fig.height = 2, fig.width = 4)
+
+sysinf <- Sys.info()
+if(sysinf['sysname'] == "Windows"){
+  extrafont::loadfonts(device="win")
+  #opts_chunk$set(dev = "CairoPDF")
+}
+```
