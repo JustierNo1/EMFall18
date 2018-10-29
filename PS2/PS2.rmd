@@ -3,7 +3,7 @@ title: "Problem Set 2 Empirical Methods"
 date: "05.11.2018"
 output: 
   html_document: 
-  latex engine: xelatex
+  #latex engine: xelatex
 author: Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)
 ---
 
@@ -33,6 +33,97 @@ if(sysinf['sysname'] == "Windows"){
 
 
 # Paper and Pencil Questions
+
+*(a) Show that* $TSS = ESS + RSS$*. Also, show you can write* $R^2 = 1-\frac{e'e}{\tilde{y}'\tilde{y}}$ *where* $\tilde{y}_i=y_i-\bar{y}$.
+
+\begin{align*}
+\sum_{i=1}^n{(y_i-\bar{y})^2}&=\sum_{i=1}^n{(y_i-\hat{y}_i-\bar{y})^2} \\ &=\sum_{i=1}^n{(y_i-\hat{y}_i)^2}+2\sum_{i=1}^n{(y_i-\hat{y}_i)(\hat{y}_i-\bar{y})}+\sum_{i=1}^n{(\hat{y}_i-\bar{y})^2}
+\end{align*}
+
+We need to show that $2\sum_{i=1}^n{(y_i-\hat{y}_i)(\hat{y}_i-\bar{y})}=0$. By the regression equation we know that:
+
+$$SSE=\sum_{i=1}^n{(y_i-\hat{y}_i)^2}=\sum_{i=1}^n{(y_i-\beta_0-\beta_1x_i)^2}$$
+As we minimize SSE to find $\beta_1,\beta_0$ we search for the partial derivatives:
+
+\begin{align*}
+\frac{\delta SSE}{\delta \beta_0}&=\sum_{i=1}^n{2(y_i-\beta_0-\beta_1x_i)(-1)} \overset{!}{=}0 \\
+\sum_{i=1}^n{\beta_0} &= \sum_{i=1}^n{y_i}-\beta_1 \sum_{i=1}^n{x_i} \Rightarrow 0=\sum_{i=1}^n{(y_i-\hat{y}_i)} \tag{a} \\
+n\beta_0 &= \sum_{i=1}^n{y_i}-\beta_1 \sum_{i=1}^n{x_i} \\
+\beta_0 &= \frac{1}{n}\sum_{i=1}^n{y_i} - \beta_1 \frac{1}{n} \sum_{i=1}^n{x_i}
+\end{align*}
+
+We take the second partial derivative:
+
+\begin{equation}
+\frac{\delta SSE}{\delta \beta_1} = \sum_{i=1}^n{2(y_i-\beta_0-\beta_1x_i)(-x_i)} \overset{!}{=}0  \\
+\sum_{i=1}^n{2(y_i-\beta_0-\beta_1x_i)} = 0
+\end{equation}
+
+By the regression equation $\hat{y}_i=\beta_0 + \beta_1x_i$, thus $\frac{\hat{y}_i-\beta_0}{\beta_1}$ and so:
+
+\begin{equation}
+\sum_{i=1}^n{x_i (y_i-\hat{y}_i)} = 0 \\
+\sum_{i=1}^n{\left(\frac{\hat{y}_i-\beta_0}{\beta_1}\right)(y_i-\hat{y}_i)}=0 \\
+\frac{1}{\beta_1} \sum_{i=1}^n{\hat{y}_i(y_i-\hat{y}_i)} - \frac{\beta_0}{\beta_1} \sum_{i=1}^n{(y_i-\hat{y}_i)}=0
+\end{equation}
+
+Using equation (a) in the second part:
+
+\begin{equation}
+\sum_{i=1}^n{\hat{y}_i(y_i-\hat{y}_i)} = 0 \tag{b}
+\end{equation}
+
+We needed to show that $2\sum_{i=1}^n{(y_i-\hat{y}_i)(\hat{y}_i-\bar{y})}=0$:
+
+$$\sum_{i=1}^n{(y_i-\hat{y}_i)(\hat{y}_i-\bar{y})}=\sum_{i=1}^n{\hat{y}_i(y_i-\hat{y}_i)}- \bar{y}\sum_{i=1}^n{(y_i-\hat{y}_i)}$$
+Where the first part is 0 because of (b) and the second part because of (a).
+
+For the second part of the question, we know that $e'e=\sum{e_i^2}=RSS$ and $\tilde{y}'\tilde{y}=\sum{y_i-\bar{y}}=TSS$. As $ESS=TSS-RSS$ and $TSS=RSS+ESS$ this becomes:
+
+\begin{align*}
+R^2 &= \frac{ESS}{TSS} \\
+&= \frac{TSS-RSS}{TSS} \\
+&= \frac{TSS}{TSS}-\frac{RSS}{TSS} \\
+&= 1- \frac{RSS}{TSS}
+\end{align*}
+
+*(b) Show that* $R^2 = corr^2(y, \hat{y})$. *What is the intuition behind it?*
+
+\begin{align*}
+corr^2(y, \hat{y}) &= \left(\frac{Cov(y,\hat{y})}{\sqrt{Var(y)Var(\hat{y})}}\right)^2 \\
+&= \frac{(Cov(y,\hat{y}))^2}{Var(y)Var(\hat{y})} \\
+&= \frac{(Cov(\hat{y}+e,\hat{y}))^2}{Var(y)Var(\hat{y})} \\
+&= \frac{(Cov(\hat{y},\hat{y})+Cov(\hat{y},e))^2}{Var(y)Var(\hat{y})} \\
+&= \frac{(Cov(\hat{y},\hat{y}))^2}{Var(y)Var(\hat{y})} \\
+&= \frac{(Var(\hat{y}))^2}{Var(y)Var(\hat{y})} \\
+&= \frac{Var(\hat{y})}{Var(y)}=\frac{ESS}{TSS}=R^2
+\end{align*}
+
+The intuition behind this is how much of the total variance can be explained with our model that yields $Var(\hat{y})$.
+
+*(c) Suppose you decided to measure all of your* $X$ *variables in different units such that your new* $X$ *variable, call it* $\tilde{X}$, *is exactly double your old one, i.e.* $\tilde{X} = 2X$. *Suppose you run the regression of* $y$ *on* $\tilde{X}$;  *call the resulting estimate* $\tilde{\beta}$. *You showed in Problem Set 1 that *$\tilde{\beta}=\frac{1}{2}\hat{\beta}$. *Is the $R^2$ different in the two models? Provide an intuitive answer.*
+
+We have seen above that $R^2=\frac{Var(\hat{y})}{Var(y)}$. The denominator will not change as $y$ is not affected. $Var(\hat{y})$ is given by the model $\hat{y}=\beta_0+\tilde{\beta}x$. Using the hint from Problem Set 1, $\hat{y}=\beta_0+\frac{1}{2}\hat{\beta}2x$, which yields the same model as before. In other words, the new estimator $\tilde{\beta}$ adjusts for the new units in $X$. Thus $R^2$ is not going to change.
+
+*(d) Intuitively discuss the fact that including another regressor in the linear model always decreases the* $RSS$.
+
+By adding another variable, we add another covariance to the model which will mechanically always increase $Var(\hat{y})$ and hence $ESS$. As $RSS=TSS-ESS$, this will always decrease $RSS$.
+
+*(e) Provide a formal proof of point (d).*
+
+$$R^2=\frac{\sum_{i=1}^n{(\hat{y}_i-\bar{y})}}{\sum_{i=1}^n{(y_i-\bar{y})}}$$
+$y,\bar{y}$ is not affected by a change in $x$. So we focus on $\hat{y}$:
+
+\begin{align*}
+\hat{y}&=\beta_0+\tilde{\beta}x \\
+\hat{y}&=\beta_0+\frac{1}{2}\hat{\beta}2x
+\end{align*}
+
+So $\hat{y}$ remains unchanged and none of the variables in the equation for $R^2$ changes.
+
+*(f) Can you suggest a problem of interpreting the* $R^2$ *as a measure of how “good” the model is? If you think the model might not be “good”, why might it nevertheless have a high* $R^2$*?*
+
+A good model identifies causal relationships between the dependent variable $y$ and the independent variables $x$. By adding more independent variables, we increase $R^2$ (seen above), but this tells us nothing about the causal relationship between $y$ and $x$. To identify causal relationships, we need $x$ variables with robust standard errors, however $R^2$ is not affected by the errors in $x$. This means we can have a "bad" model which still has a high $R^2$. The problem is that $R^2$ tells us how well our model fits the sample. If we only try to increase $R^2$, we have a tendency to overfit the model to the sample at hand, but might ignore the causal relationships of the true population.
 
 ### 2. The gender wage gap
 
