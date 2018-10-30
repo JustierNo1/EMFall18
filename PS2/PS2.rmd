@@ -24,6 +24,10 @@ library(tidyr)
 library(formatR)
 library(dplyr)
 
+install.packages("pacman")
+pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr) 
+
+
 knitr::opts_chunk$set(echo = TRUE, fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,
                       fig.height = 2, fig.width = 4)
 
@@ -110,7 +114,7 @@ We have seen above that $R^2=\frac{Var(\hat{y})}{Var(y)}$. The denominator will 
 
 *(d) Intuitively discuss the fact that including another regressor in the linear model always decreases the* $RSS$.
 
-By adding another variable, we add another covariance to the model which will mechanically always increase $Var(\hat{y})$ and hence $ESS$. As $RSS=TSS-ESS$, this will always decrease $RSS$.
+Intuitively, if I keep adding another regressor in the linear model our model the variance left (which is approximated by the $RSS$) will be less. More formally, by adding another variable, we add another covariance to the model which will mechanically always increase $Var(\hat{y})$ and hence $ESS$. As $RSS=TSS-ESS$, this will always decrease $RSS$.
 
 *(e) Provide a formal proof of point (d).*
 
