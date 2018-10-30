@@ -3,9 +3,9 @@ title: "Problem Set 2 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "05.11.2018"
 output:
+  html_document: default
   pdf_document:
     extra_dependencies: ["dcolumn"]
-  html_document: default
 ---
 
 ```{r global options, include=FALSE}
@@ -24,8 +24,8 @@ library(tidyr)
 library(formatR)
 library(dplyr)
 
-install.packages("pacman")
-pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr) 
+#install.packages("pacman")
+#pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr) 
 
 
 knitr::opts_chunk$set(echo = TRUE, fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,
@@ -251,7 +251,7 @@ stargazer(lm5, title="Regression Results", type="latex", header = FALSE,
  no.space=TRUE, p.auto = TRUE)
 ```
 
-Females earn on average 44.25% less than males with the same education and age. This is economically significant, by using the average wage and multiplying with the female coefficient we get `r USCPS$wage*0.4425`, a substantial difference.
+Females earn on average 44.25% less than males with the same education and age. This is economically significant, by using the average wage and multiplying with the female coefficient we get `r mean(USCPS$wage)*0.4425`, a substantial difference.
 
 To test in R whether $\beta_4 = 0$, we can simply look at the p-value of the female coefficient and see that is well below 5%. Using $\alpha=5\%$, we can state that $\beta_4$ is significantly different from 0. 
 
@@ -263,3 +263,36 @@ Construct test statistic:
 
 $$\frac{\hat{\beta_4}-\beta_4}{stderr(\hat{\beta_4})}=\tilde{t}=\frac{-0.4427-0}{0.0024}=-184,46$$
 Now we look up in a t-table to find the critical value to find that the critical value $\bar{t}_{-184.46}=-1.967$ for $\alpha=5\%$. As $-184,46<-1.967$, we can reject $H_1$ and state that the coefficient is significantly different from 0 at the 5% confidence level. We used a two-sided test here because the question was to identify if the effect is different from 0, which can go both ways. 
+
+*(d)* *Use R/Stata to get $\beta_4$ (the coefficient on female) using partitioned regression as we did in lecture.* \\ 
+
+Given that: 
+
+\begin{align*}
+Y &=\beta X +\epsilon_{i} \\ &=X_k \beta_{k} + X_{-k} \beta_{-k} +\epsilon_{i}
+\end{align*}
+
+The idea of partitionated regression is to show that The $k^th$ coefficient in a multiple OLS regression is equivalent to the
+coefficient in a simple OLS regression of the y on the residual from a regression of $X_k$ on all the other regressions. In this case, the first step is to regress the fact of being femail on the education and age to see how much of the variance is explained by those. 
+```{r}
+Model6 = female ~ educ + age
+lm6 <- lm(Model6, data = USCPS, x=TRUE)
+
+stargazer(lm6, title="Regression Results", type="latex", header = FALSE,
+          align=TRUE, dep.var.labels=c("Female"),
+          covariate.labels=c("Education","Age"),
+          no.space=TRUE, p.auto = TRUE)
+
+```
+Log wage is regressed on the residuals of the last regression and it is possible to see that in both Model 7 and Model 5 the coefficient of the female and of the residuals is the same. 
+```{r}
+fem_res <- residuals(lm6) # Save the female residual values
+
+Model7 = lw ~ fem_res
+lm7 <- lm(Model7, data = USCPS, x=TRUE)
+stargazer(lm7, title="Regression Results", type="latex", header = FALSE,
+          align=TRUE, dep.var.labels=c("Log Wage"),
+          covariate.labels=c("Female Residuals"),
+          no.space=TRUE, p.auto = TRUE)
+```
+This is the demonstration that the only variation left in the variable "female to identify its coefficient is the variation left after running a regression of female on education and age.
