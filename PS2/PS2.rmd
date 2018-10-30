@@ -128,7 +128,7 @@ So $\hat{y}$ remains unchanged and none of the variables in the equation for $R^
 
 A good model identifies causal relationships between the dependent variable $y$ and the independent variables $x$. By adding more independent variables, we increase $R^2$ (seen above), but this tells us nothing about the causal relationship between $y$ and $x$. To identify causal relationships, we need $x$ variables with robust standard errors, however $R^2$ is not affected by the errors in $x$. This means we can have a "bad" model which still has a high $R^2$. The problem is that $R^2$ tells us how well our model fits the sample. If we only try to increase $R^2$, we have a tendency to overfit the model to the sample at hand, but might ignore the causal relationships of the true population.
 
-### 2. The gender wage gap
+# The gender wage gap
 
 *Suppose you want to test whether in your country women are discriminated against  relative to men in terms of wages. You decide that you want to test whether men and women have different salaries. Suppose you are able to gather data on the whole working population in your country. For each individual you have the following information.*
 
@@ -157,7 +157,7 @@ $$E(Wage_i|Edu_i,Male_i)=\begin{cases}
      \alpha  + \beta_1Edu_i + \beta_2 + \beta_3Edu_i + \epsilon_i,& \text{if } Male_i = 1
 \end{cases}$$
 
-## 2. Empirical Application
+# Empirical Application
 **1. The Gender Wage Gap.** *In this exercise we will try to explore some discrimination theories analyzing a subsample from the US CPS2015. Many politicians, institutional observers, and researchers still claim today the existence of discrimination against female workers in the labor market. They base their claims looking at the gender wage gap, i.e. the difference between men’s and women’s wages. As many other things in
 economics, this wage gap can be generated both from the demand side (employers who discriminate against women) and from the supply side (women having different skills or preferences for specific jobs or for entering the labor market at all). In this exercise we will try to learn more about the gender wage gap, while testing you on your econometric toolkit. For this question, assume that Assumption 2 (Mean-zero Error) holds so that you can make causal statements in your answers.*
 
@@ -207,9 +207,55 @@ lm2 <- lm(Model2, data = USCPS, x=TRUE)
 stargazer(lm1, lm2, title="Regression Results", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Wage"),
  covariate.labels=c("Education","University x Education"),
- omit.stat=c("all"), no.space=TRUE, ci = TRUE)
+ omit.stat=c("all"), no.space=TRUE)
 
 ```
 Without the university dummy, a 1 year increase in education is reflected by a wage increase of 7.074 USD. By adding the interaction term $University \times Education$ we separate the effect of years of education from years of university education. This results in a decreased coefficient for $Education$, 4.975 wheras the interaction term tells that a 1 year increase in university education is reflected by a wage increase of 15.18 USD. So people who attended university have a wage increase of 15.18 USD for an extra year of education whereas people without tertiary education only have an increase of 4.975 USD.
 
+*(b) Drop the university dummy. Now regress wage on education and age. Also, regress log wages (lw) on education and age. What are their coefficients? How do you interpret them? How do they compare? [Note: be sure you compare approximately equivalent objects from each specification.]*
+```{r, message=FALSE, warning=FALSE, results='asis'}
+Model3 = wage ~ educ + age
+lm3 <- lm(Model3, data = USCPS, x=TRUE)
+Model4 = lw ~ educ + age
+lm4 <- lm(Model4, data = USCPS, x=TRUE)
 
+stargazer(lm3, lm4, title="Regression Results", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Wage","Log Wage"),
+ covariate.labels=c("Education","Age"),
+ omit.stat=c("all"), no.space=TRUE)
+```
+**Interpretation Model 1:**One year increase in education controlling for age increases wage by 7.17USD. One year increase in age controlling for education increases wage by 1.461USD.
+**Interpretation Model 2:**One year increase in education controlling for age increases wage by 12%. One year increase in age controlling for education increases wage by 2.5%.
+
+Altough their interpretation is different, they are in fact the same model. We can see this by comparing the sum of the fitted values:
+```{r}
+sum(fitted.values(lm3))
+sum(fitted.values(lm4))
+```
+
+*(c) Now regress log wages on education, age, and the female dummy. You get the following model:*
+$$lw_i = \beta_1 + \beta_2educ_ii + \beta_3age_i + \beta_4female_i + \epsilon_i$$
+
+*What is the coefficient on female? How do you interpret it? Is it economically significant in your opinion? Test both in R/Stata and “by hand” the hypothesis that* $\beta_4 = 0$. *Should you use a one-sided or two-sided test? Do the one you think most appropriate.*
+```{r, message=FALSE, warning=FALSE, results='asis'}
+Model5 = lw ~ educ + age + female
+lm5 <- lm(Model5, data = USCPS, x=TRUE)
+
+stargazer(lm5, title="Regression Results", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Log Wage"),
+ covariate.labels=c("Education","Age","Female"),
+ no.space=TRUE, p.auto = TRUE)
+```
+
+Females earn on average 44.25% less than males with the same education and age. This is economically significant, by using the average wage and multiplying with the female coefficient we get `r USCPS$wage*0.4425`, a substantial difference.
+
+To test in R whether $\beta_4 = 0$, we can simply look at the p-value of the female coefficient and see that is well below 5%. Using $\alpha=5\%$, we can state that $\beta_4$ is significantly different from 0. 
+
+By hand:
+$$ H_0: \beta_4 = 0\space and\space H_1: \beta_4 \neq 0$$
+Calculate degrees of freedom:
+$$N-K=561076-4=561072$$
+Construct test statistic:
+
+$$\frac{\hat{\beta_4}-\beta_4}{stderr(\hat{\beta_4})}=\tilde{t}=\frac{-0.4427-0}{0.0024}=-184,46$$
+Now we look up in a t-table to find the critical value to find that the critical value $\bar{t}_{-184.46}=-1.967$ for $\alpha=5\%$. As $-184,46<-1.967$, we can reject $H_1$ and state that the coefficient is significantly different from 0 at the 5% confidence level. We used a two-sided test here because the question was to identify if the effect is different from 0, which can go both ways. 
