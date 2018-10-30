@@ -1,10 +1,11 @@
 ---
 title: "Problem Set 2 Empirical Methods"
+author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "05.11.2018"
-output: 
-  html_document: 
-  #latex engine: xelatex
-author: Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)
+output:
+  pdf_document:
+    extra_dependencies: ["dcolumn"]
+  html_document: default
 ---
 
 ```{r global options, include=FALSE}
@@ -20,6 +21,8 @@ library(kableExtra)
 library(ggplot2)
 library(data.table)
 library(tidyr)
+library(formatR)
+library(dplyr)
 
 knitr::opts_chunk$set(echo = TRUE, fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,
                       fig.height = 2, fig.width = 4)
@@ -192,20 +195,21 @@ USCPS$wage <- USCPS$incwage/1000 #create wage
 USCPS$lw <- log(USCPS$wage) #create log wage
 USCPS$university <- as.numeric(USCPS$educ >= 16) #create university dummy
 
-head(USCPS[university==1,])#and we quickly check if the dummy was created correctly
 ```
 
 **Run the regressions**
-```{r results='asis'}
-model.1 <- lm(wage ~ educ, data = USCPS)
-model.2 <- lm(wage ~ educ + university, data = USCPS)
-#Currently this stargazer produces an error, I could not fix it now. If you have time it would be great if you could look into this.
-# stargazer(model.1, model.2, title="Regression Results",
-#  align=TRUE, dep.var.labels=c("Wage"),
-#  covariate.labels=c("Education","University x Education"),
-#  omit.stat=c("all"), no.space=TRUE, ci = TRUE)
+```{r, message=FALSE, warning=FALSE, results='asis'}
+Model1 = wage ~ educ
+lm1 <- lm(Model1, data = USCPS, x=TRUE)
+Model2 = wage ~ educ + university
+lm2 <- lm(Model2, data = USCPS, x=TRUE)
 
-#Hence you can use this to look at the results
-summary(model.1)
-summary(model.2)
+stargazer(lm1, lm2, title="Regression Results", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Wage"),
+ covariate.labels=c("Education","University x Education"),
+ omit.stat=c("all"), no.space=TRUE, ci = TRUE)
+
 ```
+Without the university dummy, a 1 year increase in education is reflected by a wage increase of 7.074 USD. By adding the interaction term $University \times Education$ we separate the effect of years of education from years of university education. This results in a decreased coefficient for $Education$, 4.975 wheras the interaction term tells that a 1 year increase in university education is reflected by a wage increase of 15.18 USD. So people who attended university have a wage increase of 15.18 USD for an extra year of education whereas people without tertiary education only have an increase of 4.975 USD.
+
+
