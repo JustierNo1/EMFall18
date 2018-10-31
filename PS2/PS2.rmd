@@ -23,6 +23,7 @@ library(data.table)
 library(tidyr)
 library(formatR)
 library(dplyr)
+library(car)
 
 knitr::opts_chunk$set(echo = TRUE, fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,
                       fig.height = 2, fig.width = 4)
@@ -187,7 +188,7 @@ The other columns seem fine, we could still keep these observations in the datas
 USCPS <- USCPS %>% drop_na()
 ```
 
-(a) *Generate a new variable called* $wage = incwage/1000$. *Also, generate* $lw$ *taking the log of wage. Generate a dummy named university which is equal to 1 if* $education \geq 16$. *First regress wage on education, then regress wage on education and the university dummy. How does the coefficient on education change? How do you interpret it in both specifications?*
+*(a) Generate a new variable called* $wage = incwage/1000$. *Also, generate* $lw$ *taking the log of wage. Generate a dummy named university which is equal to 1 if* $education \geq 16$. *First regress wage on education, then regress wage on education and the university dummy. How does the coefficient on education change? How do you interpret it in both specifications?*
 
 **Create the variables**
 ```{r}
@@ -206,11 +207,11 @@ lm2 <- lm(Model2, data = USCPS, x=TRUE)
 
 stargazer(lm1, lm2, title="Regression Results", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Wage"),
- covariate.labels=c("Education","University x Education"),
+ covariate.labels=c("Education","University"),
  omit.stat=c("all"), no.space=TRUE)
 
 ```
-Without the university dummy, a 1 year increase in education is reflected by a wage increase of 7.074 USD. By adding the interaction term $University \times Education$ we separate the effect of years of education from years of university education. This results in a decreased coefficient for $Education$, 4.975 wheras the interaction term tells that a 1 year increase in university education is reflected by a wage increase of 15.18 USD. So people who attended university have a wage increase of 15.18 USD for an extra year of education whereas people without tertiary education only have an increase of 4.975 USD.
+Without the university dummy, a 1 year increase in education is reflected by a wage increase of 7.074 USD. By adding the dummy $university$ we separate the effect of years of education from years of university education. This results in a decreased coefficient for $Education$, 4.975 wheras the dummy term tells that people who attended university earn on average 15.18 USD more. By the drop in $Education$ we learn that 7 USD return for an additional year of education was at least partially driven by higher earnings of workers who attended university.
 
 *(b) Drop the university dummy. Now regress wage on education and age. Also, regress log wages (lw) on education and age. What are their coefficients? How do you interpret them? How do they compare? [Note: be sure you compare approximately equivalent objects from each specification.]*
 ```{r, message=FALSE, warning=FALSE, results='asis'}
@@ -222,7 +223,7 @@ lm4 <- lm(Model4, data = USCPS, x=TRUE)
 stargazer(lm3, lm4, title="Regression Results", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Wage","Log Wage"),
  covariate.labels=c("Education","Age"),
- omit.stat=c("all"), no.space=TRUE)
+ no.space=TRUE)
 ```
 **Interpretation Model 1:**One year increase in education controlling for age increases wage by 7.17USD. One year increase in age controlling for education increases wage by 1.461USD.
 **Interpretation Model 2:**One year increase in education controlling for age increases wage by 12%. One year increase in age controlling for education increases wage by 2.5%.
@@ -247,7 +248,7 @@ stargazer(lm5, title="Regression Results", type="latex", header = FALSE,
  no.space=TRUE, p.auto = TRUE)
 ```
 
-Females earn on average 44.25% less than males with the same education and age. This is economically significant, by using the average wage and multiplying with the female coefficient we get `r USCPS$wage*0.4425`, a substantial difference.
+Females earn on average 44.25% less than males with the same education and age. This is economically significant, by using the average wage and multiplying with the female coefficient we get `r mean(USCPS$wage)*0.4425`, a substantial difference.
 
 To test in R whether $\beta_4 = 0$, we can simply look at the p-value of the female coefficient and see that is well below 5%. Using $\alpha=5\%$, we can state that $\beta_4$ is significantly different from 0. 
 
@@ -258,4 +259,56 @@ $$N-K=561076-4=561072$$
 Construct test statistic:
 
 $$\frac{\hat{\beta_4}-\beta_4}{stderr(\hat{\beta_4})}=\tilde{t}=\frac{-0.4427-0}{0.0024}=-184,46$$
-Now we look up in a t-table to find the critical value to find that the critical value $\bar{t}_{-184.46}=-1.967$ for $\alpha=5\%$. As $-184,46<-1.967$, we can reject $H_1$ and state that the coefficient is significantly different from 0 at the 5% confidence level. We used a two-sided test here because the question was to identify if the effect is different from 0, which can go both ways. 
+Now we look up in a t-table to find the critical value to find that the critical value $\bar{t}_{-184.46}=-1.967$ for $\alpha=5\%$. As $-184,46<-1.967$, we can reject $H_1$ and state that the coefficient is significantly different from 0 at the 5% confidence level. We used a two-sided test here because the question was to identify if the effect is different from 0, which can go both ways.
+
+*(e) Use R/Stata to show that* $\hat{\beta_1}=\bar{y}-\bar{X}'_{-1}\hat{\beta}_{-1}$
+
+```{r}
+Beta_hat <- c(summary(lm5)$coefficients[2,1], summary(lm5)$coefficients[3,1], summary(lm5)$coefficients[4,1])
+X_bar <- c(mean(USCPS$educ), mean(USCPS$age), mean(USCPS$female))
+Beta_hat_1 <- mean(USCPS$lw)-sum(Beta_hat*X_bar)
+print(Beta_hat_1) #are calculated constant
+print(summary(lm5)$coefficients[1,1]) #the constant from the model
+```
+*(f) Include in the model in (1c) the interaction between female and education, together with the interaction between female and age. So your model is now:*
+\begin{align*}
+lw_i = &\beta_1 + \beta_2educ_i + \beta_3age_i + \beta_4female_i +\\
+&\beta_5female_i\times educ_i+\beta_6 female_i\times age_i + \epsilon_i
+\end{align*}
+*Test in R/Stata the individual hypotheses that* $\beta_4 = 0, \beta_5 = 0$, and $\beta_6 = 0$. *Test “by hand” and in R/Stata the joint hypothesis that they are all zero.*
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+Model6 = lw ~ educ + age + female + female:educ + female:age
+lm6 <- lm(Model6, data = USCPS, x=TRUE)
+
+stargazer(lm6, title="Regression Results", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Log Wage"),
+ covariate.labels=c("Education","Age","Female", "Female x Education", "Female x Age"),
+ no.space=TRUE, p.auto = TRUE)
+```
+$\beta_4, \beta_5, \beta_6$ are significantly different from zero with a p-value of well below 5%.
+For the joint significance test, we first formulate our hypothesis:
+\begin{align*}
+&H_0: \beta_4,\space\beta_5\space \textrm{and}\space \beta_6 = 0\space \\
+&H_1: \beta_4 or \beta_5 or \beta_6 \neq 0
+\end{align*}
+
+\begin{align*}
+&\textrm{Restricted Model:} lw_i = \beta_1 + \beta_2educ_i + \beta_3age_i + \epsilon_i \\
+&\textrm{Unrestricted Model:} lw_i = \beta_1 + \beta_2educ_i + \beta_3age_i + \beta_4female_i +\beta_5female_i\times educ_i+\beta_6 female_i\times age_i + \epsilon_i
+\end{align*}
+
+$$F=\frac{(R^2_U-R^2_R)/q}{(1-R^2_U)(N-K)}$$
+We identify the single elements: $R^2_U$ is `r summary(lm6)$r.squared` from the summary statistics of lm6. Same for $R^2_R$, found in the summary statistics of lm4: `r summary(lm4)$r.squared`.
+\begin{align*}
+DF_U=561076-6=561070 \qquad DF_R=561076-3=561073 \qquad q=DF_R-DF_U=3 \\
+F=\frac{(0.207-0.158)/3}{(1-0.207)(561076-6)}= 11556.3
+\end{align*}
+
+Looking up in a F-table, we find the critical value to be 1 at an $\alpha=5\%$, we can reject the null hypothesis.
+
+To do the same in R:
+```{r}
+ linearHypothesis(lm6, c("female + educ:female + age:female"))
+```
+
