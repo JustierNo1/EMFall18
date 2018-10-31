@@ -25,6 +25,10 @@ library(formatR)
 library(dplyr)
 library(car)
 
+#install.packages("pacman")
+#pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr) 
+
+
 knitr::opts_chunk$set(echo = TRUE, fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,
                       fig.height = 2, fig.width = 4)
 
@@ -111,7 +115,7 @@ We have seen above that $R^2=\frac{Var(\hat{y})}{Var(y)}$. The denominator will 
 
 *(d) Intuitively discuss the fact that including another regressor in the linear model always decreases the* $RSS$.
 
-By adding another variable, we add another covariance to the model which will mechanically always increase $Var(\hat{y})$ and hence $ESS$. As $RSS=TSS-ESS$, this will always decrease $RSS$.
+Intuitively, if I keep adding another regressor in the linear model our model the variance left (which is approximated by the $RSS$) will be less. More formally, by adding another variable, we add another covariance to the model which will mechanically always increase $Var(\hat{y})$ and hence $ESS$. As $RSS=TSS-ESS$, this will always decrease $RSS$.
 
 *(e) Provide a formal proof of point (d).*
 
@@ -259,7 +263,40 @@ $$N-K=561076-4=561072$$
 Construct test statistic:
 
 $$\frac{\hat{\beta_4}-\beta_4}{stderr(\hat{\beta_4})}=\tilde{t}=\frac{-0.4427-0}{0.0024}=-184,46$$
+
 Now we look up in a t-table to find the critical value to find that the critical value $\bar{t}_{-184.46}=-1.967$ for $\alpha=5\%$. As $-184,46<-1.967$, we can reject $H_1$ and state that the coefficient is significantly different from 0 at the 5% confidence level. We used a two-sided test here because the question was to identify if the effect is different from 0, which can go both ways.
+
+*(d)* *Use R/Stata to get $\beta_4$ (the coefficient on female) using partitioned regression as we did in lecture.* 
+Given that: 
+
+\begin{align*}
+Y &=\beta X +\epsilon_{i} \\ &=X_k \beta_{k} + X_{-k} \beta_{-k} +\epsilon_{i}
+\end{align*}
+
+The idea of partitionated regression is to show that The $k^th$ coefficient in a multiple OLS regression is equivalent to the
+coefficient in a simple OLS regression of the y on the residual from a regression of $X_k$ on all the other regressions. In this case, the first step is to regress the fact of being femail on the education and age to see how much of the variance is explained by those. 
+```{r, message=FALSE, warning=FALSE, results='asis'}
+Model6 = female ~ educ + age
+lm6 <- lm(Model6, data = USCPS, x=TRUE)
+
+stargazer(lm6, title="Regression Results", type="latex", header = FALSE,
+          align=TRUE, dep.var.labels=c("Female"),
+          covariate.labels=c("Education","Age"),
+          no.space=TRUE, p.auto = TRUE)
+
+```
+Log wage is regressed on the residuals of the last regression and it is possible to see that in both Model 7 and Model 5 the coefficient of the female and of the residuals is the same. 
+```{r, message=FALSE, warning=FALSE, results='asis'}
+fem_res <- residuals(lm6) # Save the female residual values
+
+Model7 = lw ~ fem_res
+lm7 <- lm(Model7, data = USCPS, x=TRUE)
+stargazer(lm7, title="Regression Results", type="latex", header = FALSE,
+          align=TRUE, dep.var.labels=c("Log Wage"),
+          covariate.labels=c("Female Residuals"),
+          no.space=TRUE, p.auto = TRUE)
+```
+This is the demonstration that the only variation left in the variable "female to identify its coefficient is the variation left after running a regression of female on education and age.
 
 *(e) Use R/Stata to show that* $\hat{\beta_1}=\bar{y}-\bar{X}'_{-1}\hat{\beta}_{-1}$
 
@@ -278,10 +315,10 @@ lw_i = &\beta_1 + \beta_2educ_i + \beta_3age_i + \beta_4female_i +\\
 *Test in R/Stata the individual hypotheses that* $\beta_4 = 0, \beta_5 = 0$, and $\beta_6 = 0$. *Test “by hand” and in R/Stata the joint hypothesis that they are all zero.*
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
-Model6 = lw ~ educ + age + female + female:educ + female:age
-lm6 <- lm(Model6, data = USCPS, x=TRUE)
+Model8 = lw ~ educ + age + female + female:educ + female:age
+lm8 <- lm(Model8, data = USCPS, x=TRUE)
 
-stargazer(lm6, title="Regression Results", type="latex", header = FALSE,
+stargazer(lm8, title="Regression Results", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Log Wage"),
  covariate.labels=c("Education","Age","Female", "Female x Education", "Female x Age"),
  no.space=TRUE, p.auto = TRUE)
@@ -299,7 +336,7 @@ For the joint significance test, we first formulate our hypothesis:
 \end{align*}
 
 $$F=\frac{(R^2_U-R^2_R)/q}{(1-R^2_U)(N-K)}$$
-We identify the single elements: $R^2_U$ is `r summary(lm6)$r.squared` from the summary statistics of lm6. Same for $R^2_R$, found in the summary statistics of lm4: `r summary(lm4)$r.squared`.
+We identify the single elements: $R^2_U$ is `r summary(lm8)$r.squared` from the summary statistics of lm6. Same for $R^2_R$, found in the summary statistics of lm4: `r summary(lm4)$r.squared`.
 \begin{align*}
 DF_U=561076-6=561070 \qquad DF_R=561076-3=561073 \qquad q=DF_R-DF_U=3 \\
 F=\frac{(0.207-0.158)/3}{(1-0.207)(561076-6)}= 11556.3
@@ -309,6 +346,8 @@ Looking up in a F-table, we find the critical value to be 1 at an $\alpha=5\%$, 
 
 To do the same in R:
 ```{r}
- linearHypothesis(lm6, c("female + educ:female + age:female"))
+ linearHypothesis(lm8, c("female + educ:female + age:female"))
 ```
+
+Now we look up in a t-table to find the critical value to find that the critical value $\bar{t}_{-184.46}=-1.967$ for $\alpha=5\%$. As $-184,46<-1.967$, we can reject $H_1$ and state that the coefficient is significantly different from 0 at the 5% confidence level. We used a two-sided test here because the question was to identify if the effect is different from 0, which can go both ways. 
 
