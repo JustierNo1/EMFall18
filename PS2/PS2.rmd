@@ -24,6 +24,7 @@ library(tidyr)
 library(formatR)
 library(dplyr)
 library(car)
+library(sjmisc)
 
 #install.packages("pacman")
 #pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr) 
@@ -177,14 +178,14 @@ economics, this wage gap can be generated both from the demand side (employers w
 * *occupation*, sector of occupation
 
 At first we need to load the data in order to start our analysis:
-```{r}
+```{r results='hide'}
 USCPS <- fread('sampleUScens2015.CSV')
 head(USCPS) # Check the format
 dim(USCPS) #Check length
 summary(USCPS) #Explore the data
 ```
 The summary tells us that there are some NAs in $educ$, we want to explore this:
-```{r}
+```{r results='hide'}
 head(USCPS[rowSums(is.na(USCPS)) > 0,])
 ```
 The other columns seem fine, we could still keep these observations in the dataset. However, the data quality on these 45 observations seems poor anyway as $firmsector, occupation$ and $degfield$ are in most cases "other", which is not really informative. Also, 45 observations are just a tiny fraction of the overall sample. As it is easier to work with a complete dataframe, we drop the observations containing NAs:
@@ -215,9 +216,11 @@ stargazer(lm1, lm2, title="Regression Results", type="latex", header = FALSE,
  omit.stat=c("all"), no.space=TRUE)
 
 ```
+
 Without the university dummy, a 1 year increase in education is reflected by a wage increase of 7.074 USD. By adding the dummy $university$ we separate the effect of years of education from years of university education. This results in a decreased coefficient for $Education$, 4.975 wheras the dummy term tells that people who attended university earn on average 15.18 USD more. By the drop in $Education$ we learn that 7 USD return for an additional year of education was at least partially driven by higher earnings of workers who attended university.
 
 *(b) Drop the university dummy. Now regress wage on education and age. Also, regress log wages (lw) on education and age. What are their coefficients? How do you interpret them? How do they compare? [Note: be sure you compare approximately equivalent objects from each specification.]*
+
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 Model3 = wage ~ educ + age
 lm3 <- lm(Model3, data = USCPS, x=TRUE)
@@ -229,14 +232,12 @@ stargazer(lm3, lm4, title="Regression Results", type="latex", header = FALSE,
  covariate.labels=c("Education","Age"),
  no.space=TRUE)
 ```
+
 **Interpretation Model 1:**One year increase in education controlling for age increases wage by 7.17USD. One year increase in age controlling for education increases wage by 1.461USD.
+
 **Interpretation Model 2:**One year increase in education controlling for age increases wage by 12%. One year increase in age controlling for education increases wage by 2.5%.
 
-Altough their interpretation is different, they are in fact the same model. We can see this by comparing the sum of the fitted values:
-```{r}
-sum(fitted.values(lm3))
-sum(fitted.values(lm4))
-```
+**Comparison:**Model 1 measures in level-level terms whereas model 2 measures in log-level terms. While they both measure the effect of education and age on wage, one measures the effect of education/age on wage in absolute terms and the other in percentage points.
 
 *(c) Now regress log wages on education, age, and the female dummy. You get the following model:*
 $$lw_i = \beta_1 + \beta_2educ_ii + \beta_3age_i + \beta_4female_i + \epsilon_i$$
@@ -257,7 +258,7 @@ Females earn on average 44.25% less than males with the same education and age. 
 To test in R whether $\beta_4 = 0$, we can simply look at the p-value of the female coefficient and see that is well below 5%. Using $\alpha=5\%$, we can state that $\beta_4$ is significantly different from 0. 
 
 By hand:
-$$ H_0: \beta_4 = 0\space and\space H_1: \beta_4 \neq 0$$
+$$ H_0: \beta_4 = 0\space \textrm{and}\space H_1: \beta_4 \neq 0$$
 Calculate degrees of freedom:
 $$N-K=561076-4=561072$$
 Construct test statistic:
@@ -324,6 +325,7 @@ stargazer(lm8, title="Regression Results", type="latex", header = FALSE,
  no.space=TRUE, p.auto = TRUE)
 ```
 $\beta_4, \beta_5, \beta_6$ are significantly different from zero with a p-value of well below 5%.
+
 For the joint significance test, we first formulate our hypothesis:
 \begin{align*}
 &H_0: \beta_4,\space\beta_5\space \textrm{and}\space \beta_6 = 0\space \\
@@ -344,10 +346,96 @@ F=\frac{(0.207-0.158)/3}{(1-0.207)(561076-6)}= 11556.3
 
 Looking up in a F-table, we find the critical value to be 1 at an $\alpha=5\%$, we can reject the null hypothesis.
 
-To do the same in R:
-```{r}
- linearHypothesis(lm8, c("female + educ:female + age:female"))
+Now we look up in a t-table to find the critical value to find that the critical value $\bar{t}_{-184.46}=-1.967$ for $\alpha=5\%$. As $-184,46<-1.967$, we can reject $H_1$ and state that the coefficient is significantly different from 0 at the 5% confidence level. We used a two-sided test here because the question was to identify if the effect is different from 0, which can go both ways. 
+
+*(g)Run again the model in (1c) separately for males and females. How do the coefficients for educ and age in the males regression compare to the coefficient estimates in part (1f)? How do the coefficients for educ and age in the females regression compare to the coefficient estimates in part (1f)? What does this tell you about the impact of interacting a dummy variable with all the other variables (including the constant) in a regression?*
+
+Note that we exclude the gender dummy from the model because it become singular.
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+lm9 <- lm(Model5, data = dplyr::filter(USCPS,female==0), x=TRUE)
+lm10 <- lm(Model5, data = dplyr::filter(USCPS,female==1), x=TRUE)
+
+stargazer(lm8,lm9,lm10, title="Regression Results", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Log Wage"),
+ covariate.labels=c("Education","Age","Female", "Female x Education", "Female x Age"),
+ column.labels = c("Combined","Male", "Female"),
+ omit.stat=c("all"),
+ no.space=TRUE, p.auto = TRUE)
 ```
 
-Now we look up in a t-table to find the critical value to find that the critical value $\bar{t}_{-184.46}=-1.967$ for $\alpha=5\%$. As $-184,46<-1.967$, we can reject $H_1$ and state that the coefficient is significantly different from 0 at the 5% confidence level. We used a two-sided test here because the question was to identify if the effect is different from 0, which can go both ways. 
+The coefficients nicely add up to each other. For male they are the same because we isolated female effects. To arrive at the female coefficients, we simply add education plus $Female \times Education$, same goes for wage. This means that by using an interaction variable, we can combine more information in one regression instead of creating two single regressions and comparing them. Interacting a dummy on all variables isolates the effect on the dummy subsample.
+
+*(h) Generate a dummy for each occupation category. Can you include all of them in your model? Why or why not?*
+```{r}
+USCPS <- USCPS %>% 
+  to_dummy(occupation, var.name = "label", suffix = "label") %>% 
+  bind_cols(USCPS)
+
+```
+We cannot include all dummies in the model because then we would fall into the "dummy trap": by using all dummies we would include perfect multicollinearity as the value of one occupation is inherently defined by all other occupations. Hence we need to drop one dummy.
+
+*(i) Now test the model in part (1c) for each occupational subsample (i.e. perform the regression in part (1c) each occupation at a time). Comment on the pattern of your wage gap estimates across occupations. Is the gender wage gap statistically different across occupations? Provide support for your conclusions.*
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+lm11 <- lm(Model5, data = dplyr::filter(USCPS,occupation_other==1), x=TRUE)
+lm12 <- lm(Model5, data = dplyr::filter(USCPS,occupation_healthcare==1), x=TRUE)
+lm13 <- lm(Model5, data = dplyr::filter(USCPS,occupation_technology==1), x=TRUE)
+lm14 <- lm(Model5, data = dplyr::filter(USCPS,occupation_business==1), x=TRUE)
+lm15 <- lm(Model5, data = dplyr::filter(USCPS,occupation_science==1), x=TRUE)
+
+stargazer(lm11,lm12,lm13,lm14,lm15, title="Regression Results for different Occupations", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Log Wage"),
+ covariate.labels=c("Education","Age","Female"),
+ column.labels = c("Other","Healthcare", "Technology", "Business", "Science"),
+ omit.stat=c("all"),
+ no.space=TRUE, p.auto = TRUE)
+```
+
+It is not possible to compare the coefficients of different sub-samples and perform a hypothesis test. What we need is a combined model that interacts the female and the occupation dummy (careful to avoid the dummy trap):
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+Model10 <- lw ~ educ + age + female + occupation_healthcare:female + occupation_technology:female + occupation_business:female + occupation_science:female
+lm16 <- lm(Model10, data = USCPS, x=TRUE)
+stargazer(lm16, title="Regression Results", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Log Wage"),
+ covariate.labels=c("Education","Age","Female", "Female x Healthcare", "Female x Technology", "Female x Business", "Female x Science"),
+ omit.stat=c("all"),
+ report = ("vc*p"),
+ no.space=TRUE, p.auto = TRUE)
+```
+We want to prove that the gender gap is different across occupations, in order to do this we need to take a look at the p-values of the various interaction terms that states if change in wage of women in that field is significantly different from 0. Using $\alpha = 5\%$, we can state that the wage gap is not significant in business and science. Hence the wagegap mostly comes from healthcare, technology and other occupations.
+
+*(i) Drop all the males from your dataset.*
+```{r}
+USCPS <- dplyr::filter(USCPS,female==1)
+```
+  *i) Regress log wages on educ, age, and childrenly. Test in R/Stata H1 : childrenly < 0 for workers in technology. Is the effect negative in every occupation? Provide support for your conclusion.*
+```{r}
+Model11 <- lw ~ educ + age + childrenly
+lm17 <- lm(Model11, data = USCPS, x = TRUE)
+```
+
+  *ii) Regress log wages on educ, age, childrenly, and occupation dummies (exclude the dummy for “other”). Following the “p-value” path, test whether the gender wage gap is the same in business and science (i.e. test* $\beta_{business} = \beta{science}$). *Do the test both in R/Stata and “by hand”. How does your answer compare to Stata’s/R’s?*
+```{r, message=FALSE, warning=FALSE, results='asis'}
+Model12 <- lw ~ educ + age + childrenly + occupation_healthcare + occupation_technology + occupation_business + occupation_science
+lm18 <- lm(Model12, data = USCPS, x=TRUE)
+stargazer(lm18, title="Regression Results", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Log Wage"),
+ covariate.labels=c("Education","Age","Children", "Healthcare", "Technology", "Business", "Science"),
+ no.space=TRUE, p.auto = TRUE)
+```
+
+Test $\beta_{business} = \beta{science}$ in R:
+```{r}
+linearHypothesis(lm18, c("occupation_business=occupation_science"))
+```
+By hand:
+$$ H_0: \beta_{business} - \beta_{science} = 0\space \textrm{and}\space H_1: \beta_{business}-\beta_{science} \neq 0$$
+$$\frac{\hat{\beta}_{Business}-\hat{\beta}_{Science}-0}{Var(\hat{\beta}_{Business})+Var(\hat{\beta}_{Science})-2*Cov(\hat{\beta}_{Business},\hat{\beta}_{Business})}$$
+We can extract these values by the coefficients and the variance-covariance Matrix (command vcov()) of our model lm18 and plug in:
+$$\frac{0.144-0.002}{10^{-5}(0.350+4.424-2*1.81)}$$
+We go to a t-table to find that the p-value is 0% (as we could only find a t-table that sets DF=$\infty$ with the number of observations that are in the table). This aligns with the result R calculated, which is marginally above zero. 
+
+  *iii. How do occupations’ dummies compare to point (1i)?*
 
