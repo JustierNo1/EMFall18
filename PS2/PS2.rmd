@@ -3,9 +3,9 @@ title: "Problem Set 2 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "05.11.2018"
 output:
-  html_document: default
   pdf_document:
     extra_dependencies: ["dcolumn"]
+  html_document: default
 ---
 
 ```{r global options, include=FALSE}
