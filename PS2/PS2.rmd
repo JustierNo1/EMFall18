@@ -3,9 +3,9 @@ title: "Problem Set 2 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "05.11.2018"
 output:
-  html_document: default
   pdf_document:
     extra_dependencies: ["dcolumn"]
+  html_document: default
 ---
 
 ```{r global options, include=FALSE}
@@ -138,7 +138,7 @@ and we can demonstrate as well that:
 
 \begin{align*}
  u &=y-(X\hat{\beta}+ Z\hat{\gamma}) \\ 
-    &= y- X(X'X)^{-1} X'y - Z(Z'Z)^{-1} Z'y \\ \quad \text{
+    &= y- X(X'X)^{-1} X'y - Z(Z'Z)^{-1} Z'y \\ 
     &= y - P_X y - P_Z y  \\
     &= e - P_Z y
 \end{align*}
@@ -457,3 +457,5 @@ We go to a t-table to find that the p-value is 0% (as we could only find a t-tab
 
   *iii. How do occupations’ dummies compare to point (1i)?*
 
+*(k) Throughout this question we have assumed that Assumption 2 holds. What do you think about this assumption? Can you think about other factors we did not take into consideration in our model that could bias the conclusion that we are measuring the true gender wage gap?* 
+The assumption 2 is pretty a strong assumption, and when it is violeted we say that (at least one of the) variables is endogenous and that the $\hat{\beta}$ is biased. The main sources of this bias are: omitted variable and/or measurment error. The first one could be due to the fact the we don't have a variable for location and the second given by the fact that people self report the wages and thus they are introducing noise in the model. 
