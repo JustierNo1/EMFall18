@@ -424,7 +424,7 @@ stargazer(lm16, title="Regression Results", type="latex", header = FALSE,
 ```
 We want to prove that the gender gap is different across occupations, in order to do this we need to take a look at the p-values of the various interaction terms that states if change in wage of women in that field is significantly different from 0. Using $\alpha = 5\%$, we can state that the wage gap is not significant in business and science. Hence the wagegap mostly comes from healthcare, technology and other occupations.
 
-*(i) Drop all the males from your dataset.*
+*(j) Drop all the males from your dataset.*
 ```{r}
 USCPS <- dplyr::filter(USCPS,female==1)
 ```
