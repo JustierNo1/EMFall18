@@ -3,9 +3,9 @@ title: "Problem Set 2 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "05.11.2018"
 output:
+  html_document: default
   pdf_document:
     extra_dependencies: ["dcolumn"]
-  html_document: default
 ---
 
 ```{r global options, include=FALSE}
@@ -27,7 +27,7 @@ library(car)
 library(sjmisc)
 
 #install.packages("pacman")
-#pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr) 
+#pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr,car,sjmisc) 
 
 
 knitr::opts_chunk$set(echo = TRUE, fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,
@@ -120,15 +120,33 @@ Intuitively, if I keep adding another regressor in the linear model our model th
 
 *(e) Provide a formal proof of point (d).*
 
-$$R^2=\frac{\sum_{i=1}^n{(\hat{y}_i-\bar{y})}}{\sum_{i=1}^n{(y_i-\bar{y})}}$$
-$y,\bar{y}$ is not affected by a change in $x$. So we focus on $\hat{y}$:
+$Y= X\beta+\epsilon$ gives residuals $e$ and $R^2_1$
+$Y= X\beta+Z\gamma+\upsilon$ gives residuals $u$ and $R^2_2$
 
+It's always true that adding variables like $Z\gamma$ increases $R^2$ so we will have that $R^2_2 > R^2_1$
+Thus we have that: 
+$$1-\frac{e'e}{\tilde{y}'\tilde{y}} < 1-\frac{u'u}{\tilde{y}'\tilde{y}}$$
+And we have that: 
 \begin{align*}
-\hat{y}&=\beta_0+\tilde{\beta}x \\
-\hat{y}&=\beta_0+\frac{1}{2}\hat{\beta}2x
+ e &=y-X\hat{\beta} \\ 
+    &= y-X(X'X)^{-1} X'y \\
+    &= (I_N - X(X'X)^{-1} X')y \\
+    &= I_N - P_X y = M_x y
 \end{align*}
 
-So $\hat{y}$ remains unchanged and none of the variables in the equation for $R^2$ changes.
+and we can demonstrate as well that:
+
+\begin{align*}
+ u &=y-(X\hat{\beta}+ Z\hat{\gamma}) \\ 
+    &= y- X(X'X)^{-1} X'y - Z(Z'Z)^{-1} Z'y \\ \quad \text{
+    &= y - P_X y - P_Z y  \\
+    &= e - P_Z y
+\end{align*}
+Given that:  $$X(X'X)^{-1} X = P_X$$ and $$ Z(Z'Z)^{-1} Z' = P_Z $$
+
+At this point we can clearly see that: 
+
+$$u'u < e'e$$
 
 *(f) Can you suggest a problem of interpreting the* $R^2$ *as a measure of how “good” the model is? If you think the model might not be “good”, why might it nevertheless have a high* $R^2$*?*
 
@@ -149,8 +167,8 @@ Where *Male* is a dummy variable which takes value 0 for females and 1 for male 
 *(b) Provide a graphical representation of the conditional expectation function (i.e. the part of wages that we can explain with our covariates) and show if and how it differs for men and women.*
 
 $$E(Wage_i|Edu_i,Male_i)=\begin{cases}
-    \alpha + \beta_1Edu_i + \epsilon_i,& \text{if } Male_i = 0\\
-     \alpha  + \beta_1Edu_i + \beta_2 + \epsilon_i,& \text{if } Male_i = 1
+    \alpha + \beta_1Edu_i ,& \text{if } Male_i = 0\\
+     \alpha  + \beta_1Edu_i + \beta_2 ,& \text{if } Male_i = 1
 \end{cases}$$
 
 *(c) In retrospect, you decide that years of education might have a different marginal effect on men compared to women. How would you modify your regression model to account for this differential effect?*
