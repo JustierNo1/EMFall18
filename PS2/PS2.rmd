@@ -63,18 +63,18 @@ n\beta_0 &= \sum_{i=1}^n{y_i}-\beta_1 \sum_{i=1}^n{x_i} \\
 
 We take the second partial derivative:
 
-\begin{equation}
-\frac{\delta SSE}{\delta \beta_1} = \sum_{i=1}^n{2(y_i-\beta_0-\beta_1x_i)(-x_i)} \overset{!}{=}0  \\
-\sum_{i=1}^n{2(y_i-\beta_0-\beta_1x_i)} = 0
-\end{equation}
+\begin{align*}
+\frac{\delta SSE}{\delta \beta_1} = &\sum_{i=1}^n{2(y_i-\beta_0-\beta_1x_i)(-x_i)} \overset{!}{=}0  \\
+&\sum_{i=1}^n{x_i(y_i-\beta_0-\beta_1x_i)} = 0 \\
+&\sum_{i=1}^n{x_i(y_i-\hat{y_i})}
+\end{align*}
 
-By the regression equation $\hat{y}_i=\beta_0 + \beta_1x_i$, thus $\frac{\hat{y}_i-\beta_0}{\beta_1}$ and so:
+By the regression equation $\hat{y}_i=\beta_0 + \beta_1x_i$, thus $x_i=\frac{\hat{y}_i-\beta_0}{\beta_1}$ and so:
 
-\begin{equation}
-\sum_{i=1}^n{x_i (y_i-\hat{y}_i)} = 0 \\
-\sum_{i=1}^n{\left(\frac{\hat{y}_i-\beta_0}{\beta_1}\right)(y_i-\hat{y}_i)}=0 \\
-\frac{1}{\beta_1} \sum_{i=1}^n{\hat{y}_i(y_i-\hat{y}_i)} - \frac{\beta_0}{\beta_1} \sum_{i=1}^n{(y_i-\hat{y}_i)}=0
-\end{equation}
+\begin{align*}
+\sum_{i=1}^n{\left(\frac{\hat{y}_i-\beta_0}{\beta_1}\right)(y_i-\hat{y}_i)}&=0 \\
+\frac{1}{\beta_1} \sum_{i=1}^n{\hat{y}_i(y_i-\hat{y}_i)} - \frac{\beta_0}{\beta_1} \sum_{i=1}^n{(y_i-\hat{y}_i)}=&0
+\end{align*}
 
 Using equation (a) in the second part:
 
@@ -116,7 +116,7 @@ We have seen above that $R^2=\frac{Var(\hat{y})}{Var(y)}$. The denominator will 
 
 *(d) Intuitively discuss the fact that including another regressor in the linear model always decreases the* $RSS$.
 
-Intuitively, if I keep adding another regressor in the linear model our model the variance left (which is approximated by the $RSS$) will be less. More formally, by adding another variable, we add another covariance to the model which will mechanically always increase $Var(\hat{y})$ and hence $ESS$. As $RSS=TSS-ESS$, this will always decrease $RSS$.
+Adding other regressors reduces the residual variance (as we minimize $RSS$) . More formally, by adding another variable, we add another covariance to the model which will mechanically always increase $Var(\hat{y})$ and hence $ESS$. As $RSS=TSS-ESS$, this will always decrease $RSS$.
 
 *(e) Provide a formal proof of point (d).*
 
@@ -142,6 +142,7 @@ and we can demonstrate as well that:
     &= y - P_X y - P_Z y  \\
     &= e - P_Z y
 \end{align*}
+
 Given that:  $$X(X'X)^{-1} X = P_X$$ and $$ Z(Z'Z)^{-1} Z' = P_Z $$
 
 At this point we can clearly see that: 
@@ -227,8 +228,9 @@ Model1 = wage ~ educ
 lm1 <- lm(Model1, data = USCPS, x=TRUE)
 Model2 = wage ~ educ + university
 lm2 <- lm(Model2, data = USCPS, x=TRUE)
-
-stargazer(lm1, lm2, title="Regression Results", type="latex", header = FALSE,
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm1, lm2, title="Regression Results Wage Education University", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Wage"),
  covariate.labels=c("Education","University"),
  omit.stat=c("all"), no.space=TRUE)
@@ -244,8 +246,9 @@ Model3 = wage ~ educ + age
 lm3 <- lm(Model3, data = USCPS, x=TRUE)
 Model4 = lw ~ educ + age
 lm4 <- lm(Model4, data = USCPS, x=TRUE)
-
-stargazer(lm3, lm4, title="Regression Results", type="latex", header = FALSE,
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm3, lm4, title="Regression Results Wage Education Age", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Wage","Log Wage"),
  covariate.labels=c("Education","Age"),
  no.space=TRUE)
@@ -264,28 +267,31 @@ $$lw_i = \beta_1 + \beta_2educ_ii + \beta_3age_i + \beta_4female_i + \epsilon_i$
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 Model5 = lw ~ educ + age + female
 lm5 <- lm(Model5, data = USCPS, x=TRUE)
-
-stargazer(lm5, title="Regression Results", type="latex", header = FALSE,
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm5, title="Regression Results Education Age Gender", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Log Wage"),
  covariate.labels=c("Education","Age","Female"),
  no.space=TRUE, p.auto = TRUE)
 ```
 
-Females earn on average 44.25% less than males with the same education and age. This is economically significant, by using the average wage and multiplying with the female coefficient we get `r mean(USCPS$wage)*0.4425`, a substantial difference.
+Females earn on average 44.25% less than males with the same education and age. This is economically significant, by using the average wage and multiplying with the female coefficient we get `r round(mean(USCPS$wage)*0.4425,2)`, a substantial difference.
 
 To test in R whether $\beta_4 = 0$, we can simply look at the p-value of the female coefficient and see that is well below 5%. Using $\alpha=5\%$, we can state that $\beta_4$ is significantly different from 0. 
 
 By hand:
-$$ H_0: \beta_4 = 0\space \textrm{and}\space H_1: \beta_4 \neq 0$$
+$$ H_0: \beta_4 = 0\space \textrm{and} \space H_1: \beta_4 \neq 0$$
 Calculate degrees of freedom:
 $$N-K=561076-4=561072$$
 Construct test statistic:
 
 $$\frac{\hat{\beta_4}-\beta_4}{stderr(\hat{\beta_4})}=\tilde{t}=\frac{-0.4427-0}{0.0024}=-184,46$$
 
-Now we look up in a t-table to find the critical value to find that the critical value $\bar{t}_{-184.46}=-1.967$ for $\alpha=5\%$. As $-184,46<-1.967$, we can reject $H_1$ and state that the coefficient is significantly different from 0 at the 5% confidence level. We used a two-sided test here because the question was to identify if the effect is different from 0, which can go both ways.
+
+Now we look up in a t-table to find the critical value to find that the critical value $\bar{t}_{-184.46}=-1.967$ for $\alpha=5\%$. As $-184,46<-1.967$, we can reject $H_0$ and state that the coefficient is significantly different from 0 at the 5% confidence level. We used a two-sided test here because the question was to identify if the effect is different from 0, which can go both ways.
 
 *(d)* *Use R/Stata to get $\beta_4$ (the coefficient on female) using partitioned regression as we did in lecture.* 
+
 Given that: 
 
 \begin{align*}
@@ -293,29 +299,31 @@ Y &=\beta X +\epsilon_{i} \\ &=X_k \beta_{k} + X_{-k} \beta_{-k} +\epsilon_{i}
 \end{align*}
 
 The idea of partitionated regression is to show that The $k^th$ coefficient in a multiple OLS regression is equivalent to the
-coefficient in a simple OLS regression of the y on the residual from a regression of $X_k$ on all the other regressions. In this case, the first step is to regress the fact of being femail on the education and age to see how much of the variance is explained by those. 
+coefficient in a simple OLS regression of the y on the residual from a regression of $X_k$ on all the other regressions. In this case, the first step is to regress the fact of being female on the education and age to see how much of the variance is explained by those. 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 Model6 = female ~ educ + age
 lm6 <- lm(Model6, data = USCPS, x=TRUE)
-
-stargazer(lm6, title="Regression Results", type="latex", header = FALSE,
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm6, title="Female on Education and Wage", type="latex", header = FALSE,
           align=TRUE, dep.var.labels=c("Female"),
           covariate.labels=c("Education","Age"),
           no.space=TRUE, p.auto = TRUE)
-
 ```
 Log wage is regressed on the residuals of the last regression and it is possible to see that in both Model 7 and Model 5 the coefficient of the female and of the residuals is the same. 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 fem_res <- residuals(lm6) # Save the female residual values
 
 Model7 = lw ~ fem_res
+```
+```{r, message=FALSE, warning=FALSE, results='asis'}
 lm7 <- lm(Model7, data = USCPS, x=TRUE)
-stargazer(lm7, title="Regression Results", type="latex", header = FALSE,
+stargazer(lm7, title="Log Wage on Female Residuals", type="latex", header = FALSE,
           align=TRUE, dep.var.labels=c("Log Wage"),
           covariate.labels=c("Female Residuals"),
           no.space=TRUE, p.auto = TRUE)
 ```
-This is the demonstration that the only variation left in the variable "female to identify its coefficient is the variation left after running a regression of female on education and age.
+This demonstrates that the only variation left in the variable "female" to identify its coefficient is the variation left after running a regression of female on education and age.
 
 *(e) Use R/Stata to show that* $\hat{\beta_1}=\bar{y}-\bar{X}'_{-1}\hat{\beta}_{-1}$
 
@@ -323,8 +331,8 @@ This is the demonstration that the only variation left in the variable "female t
 Beta_hat <- c(summary(lm5)$coefficients[2,1], summary(lm5)$coefficients[3,1], summary(lm5)$coefficients[4,1])
 X_bar <- c(mean(USCPS$educ), mean(USCPS$age), mean(USCPS$female))
 Beta_hat_1 <- mean(USCPS$lw)-sum(Beta_hat*X_bar)
-print(Beta_hat_1) #are calculated constant
-print(summary(lm5)$coefficients[1,1]) #the constant from the model
+print(Beta_hat_1) # calculated constant
+print(summary(lm5)$coefficients[1,1]) # constant from the model
 ```
 *(f) Include in the model in (1c) the interaction between female and education, together with the interaction between female and age. So your model is now:*
 \begin{align*}
@@ -333,11 +341,12 @@ lw_i = &\beta_1 + \beta_2educ_i + \beta_3age_i + \beta_4female_i +\\
 \end{align*}
 *Test in R/Stata the individual hypotheses that* $\beta_4 = 0, \beta_5 = 0$, and $\beta_6 = 0$. *Test “by hand” and in R/Stata the joint hypothesis that they are all zero.*
 
-```{r, message=FALSE, warning=FALSE, results='asis'}
+```{r}
 Model8 = lw ~ educ + age + female + female:educ + female:age
 lm8 <- lm(Model8, data = USCPS, x=TRUE)
-
-stargazer(lm8, title="Regression Results", type="latex", header = FALSE,
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm8, title="Wage on Education, Age and Gender", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Log Wage"),
  covariate.labels=c("Education","Age","Female", "Female x Education", "Female x Age"),
  no.space=TRUE, p.auto = TRUE)
@@ -346,8 +355,8 @@ $\beta_4, \beta_5, \beta_6$ are significantly different from zero with a p-value
 
 For the joint significance test, we first formulate our hypothesis:
 \begin{align*}
-&H_0: \beta_4,\space\beta_5\space \textrm{and}\space \beta_6 = 0\space \\
-&H_1: \beta_4 or \beta_5 or \beta_6 \neq 0
+&H_0: \beta_4+\beta_5+\beta_6 = 0\\
+&H_1: \beta_4+\beta_5+\beta_6 \neq 0
 \end{align*}
 
 \begin{align*}
@@ -357,14 +366,12 @@ For the joint significance test, we first formulate our hypothesis:
 
 $$F=\frac{(R^2_U-R^2_R)/q}{(1-R^2_U)(N-K)}$$
 We identify the single elements: $R^2_U$ is `r summary(lm8)$r.squared` from the summary statistics of lm6. Same for $R^2_R$, found in the summary statistics of lm4: `r summary(lm4)$r.squared`.
-\begin{align*}
+\begin{equation}
 DF_U=561076-6=561070 \qquad DF_R=561076-3=561073 \qquad q=DF_R-DF_U=3 \\
 F=\frac{(0.207-0.158)/3}{(1-0.207)(561076-6)}= 11556.3
-\end{align*}
+\end{equation}
 
 Looking up in a F-table, we find the critical value to be 1 at an $\alpha=5\%$, we can reject the null hypothesis.
-
-Now we look up in a t-table to find the critical value to find that the critical value $\bar{t}_{-184.46}=-1.967$ for $\alpha=5\%$. As $-184,46<-1.967$, we can reject $H_1$ and state that the coefficient is significantly different from 0 at the 5% confidence level. We used a two-sided test here because the question was to identify if the effect is different from 0, which can go both ways. 
 
 *(g)Run again the model in (1c) separately for males and females. How do the coefficients for educ and age in the males regression compare to the coefficient estimates in part (1f)? How do the coefficients for educ and age in the females regression compare to the coefficient estimates in part (1f)? What does this tell you about the impact of interacting a dummy variable with all the other variables (including the constant) in a regression?*
 
@@ -373,8 +380,9 @@ Note that we exclude the gender dummy from the model because it become singular.
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 lm9 <- lm(Model5, data = dplyr::filter(USCPS,female==0), x=TRUE)
 lm10 <- lm(Model5, data = dplyr::filter(USCPS,female==1), x=TRUE)
-
-stargazer(lm8,lm9,lm10, title="Regression Results", type="latex", header = FALSE,
+```
+```{r, echo=FALSE,message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm8,lm9,lm10, title="Regression Results for gender-separated samples", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Log Wage"),
  covariate.labels=c("Education","Age","Female", "Female x Education", "Female x Age"),
  column.labels = c("Combined","Male", "Female"),
@@ -401,7 +409,8 @@ lm12 <- lm(Model5, data = dplyr::filter(USCPS,occupation_healthcare==1), x=TRUE)
 lm13 <- lm(Model5, data = dplyr::filter(USCPS,occupation_technology==1), x=TRUE)
 lm14 <- lm(Model5, data = dplyr::filter(USCPS,occupation_business==1), x=TRUE)
 lm15 <- lm(Model5, data = dplyr::filter(USCPS,occupation_science==1), x=TRUE)
-
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 stargazer(lm11,lm12,lm13,lm14,lm15, title="Regression Results for different Occupations", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Log Wage"),
  covariate.labels=c("Education","Age","Female"),
@@ -415,47 +424,88 @@ It is not possible to compare the coefficients of different sub-samples and perf
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 Model10 <- lw ~ educ + age + female + occupation_healthcare:female + occupation_technology:female + occupation_business:female + occupation_science:female
 lm16 <- lm(Model10, data = USCPS, x=TRUE)
-stargazer(lm16, title="Regression Results", type="latex", header = FALSE,
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm16, title="Combined Model for occupations", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Log Wage"),
  covariate.labels=c("Education","Age","Female", "Female x Healthcare", "Female x Technology", "Female x Business", "Female x Science"),
  omit.stat=c("all"),
  report = ("vc*p"),
  no.space=TRUE, p.auto = TRUE)
 ```
-We want to prove that the gender gap is different across occupations, in order to do this we need to take a look at the p-values of the various interaction terms that states if change in wage of women in that field is significantly different from 0. Using $\alpha = 5\%$, we can state that the wage gap is not significant in business and science. Hence the wagegap mostly comes from healthcare, technology and other occupations.
+We want to prove that the gender gap is different across occupations, in order to do this we need to take a look at the p-values of the various interaction terms that states if change in wage of women in that field is significantly different from 0. Using $\alpha = 5\%$, we can state that the wage gap is not significant in business and science. Hence the wagegap mostly comes from $healthcare$, $technology$ and $other$ occupations.
 
 *(j) Drop all the males from your dataset.*
 ```{r}
 USCPS <- dplyr::filter(USCPS,female==1)
 ```
   *i) Regress log wages on educ, age, and childrenly. Test in R/Stata H1 : childrenly < 0 for workers in technology. Is the effect negative in every occupation? Provide support for your conclusion.*
-```{r}
+```{r, message=FALSE, warning=FALSE, results='asis'}
 Model11 <- lw ~ educ + age + childrenly
-lm17 <- lm(Model11, data = USCPS, x = TRUE)
+lm11Female <- lm(Model11, data = dplyr::filter(USCPS,occupation_other==1), x=TRUE)
+lm12Female <- lm(Model11, data = dplyr::filter(USCPS,occupation_healthcare==1), x=TRUE)
+lm13Female <- lm(Model11, data = dplyr::filter(USCPS,occupation_technology==1), x=TRUE)
+lm14Female <- lm(Model11, data = dplyr::filter(USCPS,occupation_business==1), x=TRUE)
+lm15Female <- lm(Model11, data = dplyr::filter(USCPS,occupation_science==1), x=TRUE)
 ```
 
-  *ii) Regress log wages on educ, age, childrenly, and occupation dummies (exclude the dummy for “other”). Following the “p-value” path, test whether the gender wage gap is the same in business and science (i.e. test* $\beta_{business} = \beta{science}$). *Do the test both in R/Stata and “by hand”. How does your answer compare to Stata’s/R’s?*
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm11Female,lm12Female,lm13Female,lm14Female,lm15Female, title="Regression Results for different Occupations on only Females", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Log Wage"),
+ covariate.labels=c("Education","Age","Children"),
+ column.labels = c("Other","Healthcare", "Technology", "Business", "Science"),
+ omit.stat=c("all"),
+ report = ("vc*t"),
+ no.space=TRUE, p.auto = TRUE)
+```
+
+With $H_1: \beta_{children}<0$, $H_0: \beta_{children}>0$. In a one-sided test critical value is 1.64, $\tilde{t}<1.64$ cause us to reject $H_0$. By looking at the reported t-statistics, we can find that we can reject $H_0$ in all occupations other than business". We can confirm $H_1$ in technology, but it cannot be confirmed in all occupations.
+
+  *ii) Regress log wages on educ, age, childrenly, and occupation dummies (exclude the dummy for “other”). Following the “p-value” path, test whether the gender wage gap is the same in business and science (i.e. test* $\beta_{business} = \beta_{science}$). *Do the test both in R/Stata and “by hand”. How does your answer compare to Stata’s/R’s?*
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 Model12 <- lw ~ educ + age + childrenly + occupation_healthcare + occupation_technology + occupation_business + occupation_science
 lm18 <- lm(Model12, data = USCPS, x=TRUE)
-stargazer(lm18, title="Regression Results", type="latex", header = FALSE,
+```
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm18, title="Occupation Dummies with Children", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Log Wage"),
  covariate.labels=c("Education","Age","Children", "Healthcare", "Technology", "Business", "Science"),
  no.space=TRUE, p.auto = TRUE)
 ```
 
-Test $\beta_{business} = \beta{science}$ in R:
+
+Test $\beta_{business} = \beta_{science}$ in R:
 ```{r}
 linearHypothesis(lm18, c("occupation_business=occupation_science"))
 ```
+
 By hand:
-$$ H_0: \beta_{business} - \beta_{science} = 0\space \textrm{and}\space H_1: \beta_{business}-\beta_{science} \neq 0$$
-$$\frac{\hat{\beta}_{Business}-\hat{\beta}_{Science}-0}{Var(\hat{\beta}_{Business})+Var(\hat{\beta}_{Science})-2*Cov(\hat{\beta}_{Business},\hat{\beta}_{Business})}$$
+$$ H_0: \beta_{business} - \beta_{science} = 0\space \textrm{ and }\space H_1: \beta_{business}-\beta_{science} \neq 0$$
+$$t=\frac{\hat{\beta}_{Business}-\hat{\beta}_{Science}-0}{Var(\hat{\beta}_{Business})+Var(\hat{\beta}_{Science})-2*Cov(\hat{\beta}_{Business},\hat{\beta}_{Business})}$$
 We can extract these values by the coefficients and the variance-covariance Matrix (command vcov()) of our model lm18 and plug in:
-$$\frac{0.144-0.002}{10^{-5}(0.350+4.424-2*1.81)}$$
+```{r}
+Beta_business <- lm18$coefficients[7]
+Beta_science <- lm18$coefficients[8]
+Variance_Beta_business <- vcov(lm18)[7,7]
+Variance_Beta_science <- vcov(lm18)[8,8] #Variance Beta_Science
+Covariance_Business_Science <- vcov(lm18)[8,7] #Covariance Beta_Business Beta_Science
+t <- (Beta_business-Beta_science)/(Variance_Beta_business+Variance_Beta_science-2*Covariance_Business_Science)
+```
+
+```{r echo=FALSE}
+variabletable <- data.frame(Beta_business,Beta_science,Variance_Beta_business,Variance_Beta_science,Covariance_Business_Science,t)
+
+kable(variabletable,
+      row.names = FALSE,
+      format = 'latex') %>% kable_styling(latex_options="scale_down")
+```
+
 We go to a t-table to find that the p-value is 0% (as we could only find a t-table that sets DF=$\infty$ with the number of observations that are in the table). This aligns with the result R calculated, which is marginally above zero. 
 
   *iii. How do occupations’ dummies compare to point (1i)?*
+  
+The results from the dummies nicely illustrate why we should not compare different models to each other in (1i). I.e. the average change in earnings for females in the healthcare sample was $\sim 1.30-0.19=1.11$ while it was  $\sim 0.94-0.36=0.58$ in the model including all female observations and the occupation dummies. The model from the subsample may suffer from unexplained variance and thus biased estimators. Also, the dummy modely confirms our proposed solution to check if the gender wage gap is different across industries using interaction variables: the estimates are approximately the same.
 
-*(k) Throughout this question we have assumed that Assumption 2 holds. What do you think about this assumption? Can you think about other factors we did not take into consideration in our model that could bias the conclusion that we are measuring the true gender wage gap?* 
+*(k) Throughout this question we have assumed that Assumption 2 holds. What do you think about this assumption? Can you think about other factors we did not take into consideration in our model that could bias the conclusion that we are measuring the true gender wage gap?*
+
 The assumption 2 is pretty a strong assumption, and when it is violeted we say that (at least one of the) variables is endogenous and that the $\hat{\beta}$ is biased. The main sources of this bias are: omitted variable and/or measurment error. The first one could be due to the fact the we don't have a variable for location and the second given by the fact that people self report the wages and thus they are introducing noise in the model. 
