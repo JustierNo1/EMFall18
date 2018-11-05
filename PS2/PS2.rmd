@@ -4,8 +4,7 @@ author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "05.11.2018"
 output:
   pdf_document:
-    extra_dependencies: ["dcolumn"]
-  html_document: default
+    extra_dependencies: dcolumn
 ---
 
 ```{r global options, include=FALSE}
@@ -167,20 +166,28 @@ Where *Male* is a dummy variable which takes value 0 for females and 1 for male 
 
 *(b) Provide a graphical representation of the conditional expectation function (i.e. the part of wages that we can explain with our covariates) and show if and how it differs for men and women.*
 
+![Conditional expectation function](Image1_PS2.png)
+
 $$E(Wage_i|Edu_i,Male_i)=\begin{cases}
     \alpha + \beta_1Edu_i ,& \text{if } Male_i = 0\\
      \alpha  + \beta_1Edu_i + \beta_2 ,& \text{if } Male_i = 1
 \end{cases}$$
+
+For the graphical representation see Figure 1.
 
 *(c) In retrospect, you decide that years of education might have a different marginal effect on men compared to women. How would you modify your regression model to account for this differential effect?*
 
 $$ Wage_i = \alpha + \beta_1Edu_i + \beta_2Male_i + \beta_3Edu_i \times Male_i + \epsilon_i $$
 
 *(d) Provide a graphical representation of the conditional expectation function (i.e. the part of wages that we can explain with our covariates) and show if and how it differs for men and women*
+
+![Conditional expectation function different marginal effect](Image2_PS2.png)
 $$E(Wage_i|Edu_i,Male_i)=\begin{cases}
     \alpha + \beta_1Edu_i + \epsilon_i,& \text{if } Male_i = 0\\
      \alpha  + \beta_1Edu_i + \beta_2 + \beta_3Edu_i + \epsilon_i,& \text{if } Male_i = 1
 \end{cases}$$
+
+For the graphical representation see Figure 2.
 
 # Empirical Application
 **1. The Gender Wage Gap.** *In this exercise we will try to explore some discrimination theories analyzing a subsample from the US CPS2015. Many politicians, institutional observers, and researchers still claim today the existence of discrimination against female workers in the labor market. They base their claims looking at the gender wage gap, i.e. the difference between men’s and women’s wages. As many other things in
@@ -229,7 +236,7 @@ lm1 <- lm(Model1, data = USCPS, x=TRUE)
 Model2 = wage ~ educ + university
 lm2 <- lm(Model2, data = USCPS, x=TRUE)
 ```
-```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+```{r tab1, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 stargazer(lm1, lm2, title="Regression Results Wage Education University", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Wage"),
  covariate.labels=c("Education","University"),
@@ -237,7 +244,7 @@ stargazer(lm1, lm2, title="Regression Results Wage Education University", type="
 
 ```
 
-Without the university dummy, a 1 year increase in education is reflected by a wage increase of 7.074 USD. By adding the dummy $university$ we separate the effect of years of education from years of university education. This results in a decreased coefficient for $Education$, 4.975 wheras the dummy term tells that people who attended university earn on average 15.18 USD more. By the drop in $Education$ we learn that 7 USD return for an additional year of education was at least partially driven by higher earnings of workers who attended university.
+Without the university dummy, a 1 year increase in education is reflected by a wage increase of 7.074 USD (Table 1). By adding the dummy $university$ we separate the effect of years of education from years of university education. This results in a decreased coefficient for $Education$, 4.975 wheras the dummy term tells that people who attended university earn on average 15.18 USD more. By the drop in $Education$ we learn that 7 USD return for an additional year of education was at least partially driven by higher earnings of workers who attended university.
 
 *(b) Drop the university dummy. Now regress wage on education and age. Also, regress log wages (lw) on education and age. What are their coefficients? How do you interpret them? How do they compare? [Note: be sure you compare approximately equivalent objects from each specification.]*
 
@@ -254,7 +261,8 @@ stargazer(lm3, lm4, title="Regression Results Wage Education Age", type="latex",
  no.space=TRUE)
 ```
 
-**Interpretation Model 1:**One year increase in education controlling for age increases wage by 7.17USD. One year increase in age controlling for education increases wage by 1.461USD.
+
+**Interpretation Model 1:**One year increase in education controlling for age increases wage by 7.17USD. One year increase in age controlling for education increases wage by 1.461USD (See Table 2).
 
 **Interpretation Model 2:**One year increase in education controlling for age increases wage by 12%. One year increase in age controlling for education increases wage by 2.5%.
 
@@ -275,7 +283,7 @@ stargazer(lm5, title="Regression Results Education Age Gender", type="latex", he
  no.space=TRUE, p.auto = TRUE)
 ```
 
-Females earn on average 44.25% less than males with the same education and age. This is economically significant, by using the average wage and multiplying with the female coefficient we get `r round(mean(USCPS$wage)*0.4425,2)`, a substantial difference.
+Females earn on average 44.25% less than males with the same education and age (see Table 3). This is economically significant, by using the average wage and multiplying with the female coefficient we get `r round(mean(USCPS$wage)*0.4425,2)`, a substantial difference.
 
 To test in R whether $\beta_4 = 0$, we can simply look at the p-value of the female coefficient and see that is well below 5%. Using $\alpha=5\%$, we can state that $\beta_4$ is significantly different from 0. 
 
@@ -316,7 +324,7 @@ fem_res <- residuals(lm6) # Save the female residual values
 
 Model7 = lw ~ fem_res
 ```
-```{r, message=FALSE, warning=FALSE, results='asis'}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 lm7 <- lm(Model7, data = USCPS, x=TRUE)
 stargazer(lm7, title="Log Wage on Female Residuals", type="latex", header = FALSE,
           align=TRUE, dep.var.labels=c("Log Wage"),
@@ -351,7 +359,7 @@ stargazer(lm8, title="Wage on Education, Age and Gender", type="latex", header =
  covariate.labels=c("Education","Age","Female", "Female x Education", "Female x Age"),
  no.space=TRUE, p.auto = TRUE)
 ```
-$\beta_4, \beta_5, \beta_6$ are significantly different from zero with a p-value of well below 5%.
+$\beta_4, \beta_5, \beta_6$ are significantly different from zero with a p-value of well below 5% (see Table 6).
 
 For the joint significance test, we first formulate our hypothesis:
 \begin{align*}
@@ -366,10 +374,11 @@ For the joint significance test, we first formulate our hypothesis:
 
 $$F=\frac{(R^2_U-R^2_R)/q}{(1-R^2_U)(N-K)}$$
 We identify the single elements: $R^2_U$ is `r summary(lm8)$r.squared` from the summary statistics of lm6. Same for $R^2_R$, found in the summary statistics of lm4: `r summary(lm4)$r.squared`.
-\begin{equation}
+
+\begin{align*}
 DF_U=561076-6=561070 \qquad DF_R=561076-3=561073 \qquad q=DF_R-DF_U=3 \\
 F=\frac{(0.207-0.158)/3}{(1-0.207)(561076-6)}= 11556.3
-\end{equation}
+\end{align*}
 
 Looking up in a F-table, we find the critical value to be 1 at an $\alpha=5\%$, we can reject the null hypothesis.
 
@@ -390,7 +399,7 @@ stargazer(lm8,lm9,lm10, title="Regression Results for gender-separated samples",
  no.space=TRUE, p.auto = TRUE)
 ```
 
-The coefficients nicely add up to each other. For male they are the same because we isolated female effects. To arrive at the female coefficients, we simply add education plus $Female \times Education$, same goes for wage. This means that by using an interaction variable, we can combine more information in one regression instead of creating two single regressions and comparing them. Interacting a dummy on all variables isolates the effect on the dummy subsample.
+The coefficients nicely add up to each other. For male they are the same because we isolated female effects (see Table 7). To arrive at the female coefficients, we simply add education plus $Female \times Education$, same goes for wage. This means that by using an interaction variable, we can combine more information in one regression instead of creating two single regressions and comparing them. Interacting a dummy on all variables isolates the effect on the dummy subsample.
 
 *(h) Generate a dummy for each occupation category. Can you include all of them in your model? Why or why not?*
 ```{r}
@@ -419,7 +428,7 @@ stargazer(lm11,lm12,lm13,lm14,lm15, title="Regression Results for different Occu
  no.space=TRUE, p.auto = TRUE)
 ```
 
-It is not possible to compare the coefficients of different sub-samples and perform a hypothesis test. What we need is a combined model that interacts the female and the occupation dummy (careful to avoid the dummy trap):
+It is not possible to compare the coefficients of different sub-samples and perform a hypothesis test (see Table 8). What we need is a combined model that interacts the female and the occupation dummy (careful to avoid the dummy trap):
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 Model10 <- lw ~ educ + age + female + occupation_healthcare:female + occupation_technology:female + occupation_business:female + occupation_science:female
@@ -433,7 +442,7 @@ stargazer(lm16, title="Combined Model for occupations", type="latex", header = F
  report = ("vc*p"),
  no.space=TRUE, p.auto = TRUE)
 ```
-We want to prove that the gender gap is different across occupations, in order to do this we need to take a look at the p-values of the various interaction terms that states if change in wage of women in that field is significantly different from 0. Using $\alpha = 5\%$, we can state that the wage gap is not significant in business and science. Hence the wagegap mostly comes from $healthcare$, $technology$ and $other$ occupations.
+We want to prove that the gender gap is different across occupations, in order to do this we need to take a look at the p-values of the various interaction terms that states if change in wage of women in that field is significantly different from 0. Using $\alpha = 5\%$, we can state that the wage gap is not significant in business and science. Hence the wagegap mostly comes from $healthcare$, $technology$ and $other$ occupations (see Table 9).
 
 *(j) Drop all the males from your dataset.*
 ```{r}
@@ -459,7 +468,7 @@ stargazer(lm11Female,lm12Female,lm13Female,lm14Female,lm15Female, title="Regress
  no.space=TRUE, p.auto = TRUE)
 ```
 
-With $H_1: \beta_{children}<0$, $H_0: \beta_{children}>0$. In a one-sided test critical value is 1.64, $\tilde{t}<1.64$ cause us to reject $H_0$. By looking at the reported t-statistics, we can find that we can reject $H_0$ in all occupations other than business". We can confirm $H_1$ in technology, but it cannot be confirmed in all occupations.
+With $H_1: \beta_{children}<0$, $H_0: \beta_{children}>0$. In a one-sided test critical value is 1.64, $\tilde{t}<1.64$ cause us to reject $H_0$. By looking at the reported t-statistics, we can find that we can reject $H_0$ in all occupations other than business" (see Table 10). We can confirm $H_1$ in technology, but it cannot be confirmed in all occupations.
 
   *ii) Regress log wages on educ, age, childrenly, and occupation dummies (exclude the dummy for “other”). Following the “p-value” path, test whether the gender wage gap is the same in business and science (i.e. test* $\beta_{business} = \beta_{science}$). *Do the test both in R/Stata and “by hand”. How does your answer compare to Stata’s/R’s?*
 ```{r, message=FALSE, warning=FALSE, results='asis'}
@@ -482,7 +491,7 @@ linearHypothesis(lm18, c("occupation_business=occupation_science"))
 By hand:
 $$ H_0: \beta_{business} - \beta_{science} = 0\space \textrm{ and }\space H_1: \beta_{business}-\beta_{science} \neq 0$$
 $$t=\frac{\hat{\beta}_{Business}-\hat{\beta}_{Science}-0}{Var(\hat{\beta}_{Business})+Var(\hat{\beta}_{Science})-2*Cov(\hat{\beta}_{Business},\hat{\beta}_{Business})}$$
-We can extract these values by the coefficients and the variance-covariance Matrix (command vcov()) of our model lm18 and plug in:
+We can extract these values by the coefficients and the variance-covariance Matrix (command vcov()) of our model lm18 (see Table 11) and plug in:
 ```{r}
 Beta_business <- lm18$coefficients[7]
 Beta_science <- lm18$coefficients[8]
@@ -508,4 +517,6 @@ The results from the dummies nicely illustrate why we should not compare differe
 
 *(k) Throughout this question we have assumed that Assumption 2 holds. What do you think about this assumption? Can you think about other factors we did not take into consideration in our model that could bias the conclusion that we are measuring the true gender wage gap?*
 
-The assumption 2 is pretty a strong assumption, and when it is violeted we say that (at least one of the) variables is endogenous and that the $\hat{\beta}$ is biased. The main sources of this bias are: omitted variable and/or measurment error. The first one could be due to the fact the we don't have a variable for location and the second given by the fact that people self report the wages and thus they are introducing noise in the model. 
+Assumption 2 is one of the two "key assumptions". If it is violated, our estimates might be biased because we are also measuring some relation within the error (covariance between $x_i$ and $\epsilon_i$). So it is vital to verify that assumption 2 holds first.
+
+The main sources of this bias are: omitted variable and/or measurment error. The first one could be due to the fact the we don't have a variable for location and the second given by the fact that people self report the wages and thus they are introducing noise in the model. 
