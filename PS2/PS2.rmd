@@ -3,6 +3,8 @@ title: "Problem Set 2 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "05.11.2018"
 output:
+  html_document:
+    df_print: paged
   pdf_document:
     extra_dependencies: dcolumn
 ---
@@ -119,8 +121,10 @@ Adding other regressors reduces the residual variance (as we minimize $RSS$) . M
 
 *(e) Provide a formal proof of point (d).*
 
-$Y= X\beta+\epsilon$ gives residuals $e$ and $R^2_1$
-$Y= X\beta+Z\gamma+\upsilon$ gives residuals $u$ and $R^2_2$
+$y= X\beta+\epsilon$ gives residuals $e$ and $R^2_1$
+$y= X_z\beta_z+z\gamma+\upsilon$ gives residuals $u$ and $R^2_2$
+
+It is possible to rewrite $y= X_z\beta_z+z\gamma+\upsilon$ as $y= (X\beta+z\gamma) + \upsilon$
 
 It's always true that adding variables like $Z\gamma$ increases $R^2$ so we will have that $R^2_2 > R^2_1$
 Thus we have that: 
@@ -136,17 +140,23 @@ And we have that:
 and we can demonstrate as well that:
 
 \begin{align*}
- u &=y-(X\hat{\beta}+ Z\hat{\gamma}) \\ 
-    &= y- X(X'X)^{-1} X'y - Z(Z'Z)^{-1} Z'y \\ 
-    &= y - P_X y - P_Z y  \\
-    &= e - P_Z y
+ u &=y-(X\widehat{\beta}+ z\widehat{\gamma}) \\ 
+    &= y- X(X'X)^{-1} X'y -  z\widehat{\gamma} \\ 
+    &= y - P_X y - z\widehat{\gamma}  \\
+    &= e -  z\widehat{\gamma}
 \end{align*}
 
-Given that:  $$X(X'X)^{-1} X = P_X$$ and $$ Z(Z'Z)^{-1} Z' = P_Z $$
+Given that:  $$X(X'X)^{-1} X = P_X$$ 
+
+We know that $z\widehat{\gamma}$ is and postive and non zero because: 
+
+$$\widehat{\gamma}=(z'M_kz)^{-1}z'M_ky= (\sum z^2) \sum zy$$
 
 At this point we can clearly see that: 
 
 $$u'u < e'e$$
+
+The demonstration of $\widehat{\gamma}=(z'M_kz)^{-1}z'M_ky$ is possible if we compute it using partitioned regression. The demonstration can be found in the last page of this document.  
 
 *(f) Can you suggest a problem of interpreting the* $R^2$ *as a measure of how “good” the model is? If you think the model might not be “good”, why might it nevertheless have a high* $R^2$*?*
 
@@ -183,8 +193,8 @@ $$ Wage_i = \alpha + \beta_1Edu_i + \beta_2Male_i + \beta_3Edu_i \times Male_i +
 
 ![Conditional expectation function different marginal effect](Image2_PS2.png)
 $$E(Wage_i|Edu_i,Male_i)=\begin{cases}
-    \alpha + \beta_1Edu_i + \epsilon_i,& \text{if } Male_i = 0\\
-     \alpha  + \beta_1Edu_i + \beta_2 + \beta_3Edu_i + \epsilon_i,& \text{if } Male_i = 1
+    \alpha + \beta_1Edu_i ,& \text{if } Male_i = 0\\
+     \alpha  + \beta_1Edu_i + \beta_2 + \beta_3Edu_i & \text{if } Male_i = 1
 \end{cases}$$
 
 For the graphical representation see Figure 2.
@@ -520,3 +530,5 @@ The results from the dummies nicely illustrate why we should not compare differe
 Assumption 2 is one of the two "key assumptions". If it is violated, our estimates might be biased because we are also measuring some relation within the error (covariance between $x_i$ and $\epsilon_i$). So it is vital to verify that assumption 2 holds first.
 
 The main sources of this bias are: omitted variable and/or measurment error. The first one could be due to the fact the we don't have a variable for location and the second given by the fact that people self report the wages and thus they are introducing noise in the model. 
+
+![Additional proof of how to compute the gamma coefficient 1.e](Scannable Document on 5 Nov 2018 at 7_55_40 PM.png)
