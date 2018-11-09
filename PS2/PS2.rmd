@@ -3,10 +3,10 @@ title: "Problem Set 2 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "05.11.2018"
 output:
-  html_document:
-    df_print: paged
   pdf_document:
     extra_dependencies: dcolumn
+  html_document:
+    df_print: paged
 ---
 
 ```{r global options, include=FALSE}
@@ -124,9 +124,9 @@ Adding other regressors reduces the residual variance (as we minimize $RSS$) . M
 $y= X\beta+\epsilon$ gives residuals $e$ and $R^2_1$
 $y= X_z\beta_z+z\gamma+\upsilon$ gives residuals $u$ and $R^2_2$
 
-It is possible to rewrite $y= X_z\beta_z+z\gamma+\upsilon$ as $y= (X\beta+z\gamma) + \upsilon$
+It is possible to rewrite $y= X_z\beta_z+\upsilon$ as $y= (X\beta+z\gamma) + \upsilon$
 
-It's always true that adding variables like $Z\gamma$ increases $R^2$ so we will have that $R^2_2 > R^2_1$
+Adding variables like $Z\gamma$ increases $R^2$ so we will have that $R^2_2 > R^2_1$
 Thus we have that: 
 $$1-\frac{e'e}{\tilde{y}'\tilde{y}} < 1-\frac{u'u}{\tilde{y}'\tilde{y}}$$
 And we have that: 
@@ -148,7 +148,7 @@ and we can demonstrate as well that:
 
 Given that:  $$X(X'X)^{-1} X = P_X$$ 
 
-We know that $z\widehat{\gamma}$ is and postive and non zero because: 
+We know that $z\widehat{\gamma}$ is postive and non zero because: 
 
 $$\widehat{\gamma}=(z'M_kz)^{-1}z'M_ky= (\sum z^2) \sum zy$$
 
@@ -183,7 +183,7 @@ $$E(Wage_i|Edu_i,Male_i)=\begin{cases}
      \alpha  + \beta_1Edu_i + \beta_2 ,& \text{if } Male_i = 1
 \end{cases}$$
 
-For the graphical representation see Figure 1.
+The difference between men and women is $\beta_2$. For the graphical representation see Figure 1. 
 
 *(c) In retrospect, you decide that years of education might have a different marginal effect on men compared to women. How would you modify your regression model to account for this differential effect?*
 
@@ -192,12 +192,13 @@ $$ Wage_i = \alpha + \beta_1Edu_i + \beta_2Male_i + \beta_3Edu_i \times Male_i +
 *(d) Provide a graphical representation of the conditional expectation function (i.e. the part of wages that we can explain with our covariates) and show if and how it differs for men and women*
 
 ![Conditional expectation function different marginal effect](Image2_PS2.png)
+
 $$E(Wage_i|Edu_i,Male_i)=\begin{cases}
     \alpha + \beta_1Edu_i ,& \text{if } Male_i = 0\\
      \alpha  + \beta_1Edu_i + \beta_2 + \beta_3Edu_i & \text{if } Male_i = 1
 \end{cases}$$
 
-For the graphical representation see Figure 2.
+The difference between men and women is $\beta_2 + \beta_3Edu_i$. For the graphical representation see Figure 2.
 
 # Empirical Application
 **1. The Gender Wage Gap.** *In this exercise we will try to explore some discrimination theories analyzing a subsample from the US CPS2015. Many politicians, institutional observers, and researchers still claim today the existence of discrimination against female workers in the labor market. They base their claims looking at the gender wage gap, i.e. the difference between men’s and women’s wages. As many other things in
@@ -272,11 +273,11 @@ stargazer(lm3, lm4, title="Regression Results Wage Education Age", type="latex",
 ```
 
 
-**Interpretation Model 1:**One year increase in education controlling for age increases wage by 7.17USD. One year increase in age controlling for education increases wage by 1.461USD (See Table 2).
+**Interpretation Model 1:** One year increase in education controlling for age increases wage by 7.17USD. One year increase in age controlling for education increases wage by 1.461USD (See Table 2).
 
-**Interpretation Model 2:**One year increase in education controlling for age increases wage by 12%. One year increase in age controlling for education increases wage by 2.5%.
+**Interpretation Model 2:** One year increase in education controlling for age increases wage by 12%. One year increase in age controlling for education increases wage by 2.5%.
 
-**Comparison:**Model 1 measures in level-level terms whereas model 2 measures in log-level terms. While they both measure the effect of education and age on wage, one measures the effect of education/age on wage in absolute terms and the other in percentage points.
+**Comparison:** Model 1 measures in level-level terms whereas model 2 measures in log-level terms. While they both measure the effect of education and age on wage, one measures the effect of education/age on wage in absolute terms and the other in percentage points.
 
 *(c) Now regress log wages on education, age, and the female dummy. You get the following model:*
 $$lw_i = \beta_1 + \beta_2educ_ii + \beta_3age_i + \beta_4female_i + \epsilon_i$$
@@ -298,7 +299,7 @@ Females earn on average 44.25% less than males with the same education and age (
 To test in R whether $\beta_4 = 0$, we can simply look at the p-value of the female coefficient and see that is well below 5%. Using $\alpha=5\%$, we can state that $\beta_4$ is significantly different from 0. 
 
 By hand:
-$$ H_0: \beta_4 = 0\space \textrm{and} \space H_1: \beta_4 \neq 0$$
+$$ H_0: \beta_4 = 0 \space \textrm{and} \space H_1: \beta_4 \neq 0$$
 Calculate degrees of freedom:
 $$N-K=561076-4=561072$$
 Construct test statistic:
