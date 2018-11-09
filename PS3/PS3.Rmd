@@ -1,0 +1,135 @@
+---
+title: "Problem Set 2 Empirical Methods"
+author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
+date: "05.11.2018"
+output:
+  pdf_document:
+    extra_dependencies: dcolumn
+  html_document:
+    df_print: paged
+---
+
+```{r global options, include=FALSE}
+library(knitr)
+library(Cairo)
+library(extrafont)
+library(latex2exp)
+library(readstata13)
+library(Hmisc)
+library(lmtest)
+library(stargazer)
+library(kableExtra)
+library(ggplot2)
+library(data.table)
+library(tidyr)
+library(formatR)
+library(dplyr)
+library(car)
+library(sjmisc)
+
+#install.packages("pacman")
+#pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr,car,sjmisc) 
+
+
+knitr::opts_chunk$set(echo = TRUE, fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,
+                      fig.height = 2, fig.width = 4)
+
+sysinf <- Sys.info()
+if(sysinf['sysname'] == "Windows"){
+  extrafont::loadfonts(device="win")
+  #opts_chunk$set(dev = "CairoPDF")
+}
+```
+
+
+# Paper and Pencil Questions
+
+## 1 Coefficient Interpretation
+
+### a)
+$$ consumption_i = \beta_1 + \beta_2income_i + \epsilon_i$$
+A 1-unit increase in income (1 USD) would effect in an increased consumption of 0.267 USD.
+
+### b)
+$$ consumption_i = \beta_1 + \beta_2income_i + \beta_3famsize + \epsilon_i$$
+A 1-unit increase in income (1 USD) would effect in an increased consumption of 0.254 USD, holding family size constant. Every additional family member increases consumption by 625 USD.
+
+### c)
+The coefficient on income is still 0.254, so the effect size did not change from the model in b). But we can now interpret it as: a 1-unit increase in income (1 USD) would effect in an increased consumption of 0.254 USD, controlling for family size and house owners.
+
+### d)
+The coefficients change from model (1) to model (2) as part of the coefficient in $income$ also reflected $famsize$, a intuitive explanation would be that people with larger families have to work (& hence earn) more to feed the family which biases the effect of income. The coefficients $\beta_2 \space\textrm{and}\space \beta_3$ barely change from model (2) to model (3), so the fact that someone is owning a house did not explain any part of the coefficients on $income \space \textrm{and} \space famsize$. As this makes model (3) inefficent, model (2) is the right one since it allows causal statements on the effect of income and family size on consumption.
+
+## Omitted Variable Bias
+
+### a)
+$\hat{\alpha}_1$ is defined as:
+
+$$\hat{\alpha}_1=\frac{cov(X_{1i},Y_i)}{var(X_{1i})}$$
+Plug in $Y_i$ of the true model to find the conditional expectation:
+
+\begin{align*}
+E(\hat{\alpha}_1|X) &= \frac{\overbrace{cov(X_{1i},\beta_0)}^{=0}+\overbrace{cov(X_{1i},\beta_1X_{1i})}^{=\beta_1\space var(X_{1i})}+\overbrace{cov(X_{1i},\beta_2X_{2i})}^{=\beta_2\space cov(X_{1i},x_{2i})}+\overbrace{cov(X_{2i},\epsilon_i)}^{=0 \textrm{, under A2}}}{var(X_{1i})} \\
+&= \beta_1 + \beta_2 \frac{cov(X_{1i},X_{2i})}{var(X_{1i})}=\beta_1 + \beta_2\hat{\beta}_{X_{2i}\space on \space X_{1i}} \tag{a}
+\end{align*}
+
+Where $\hat{\beta}_{X_{2i}\space on \space X_{1i}}$ is the OLS coefficient from the regression of $X_{2i}$ on $X_{1i}$.
+
+### b)
+
+From slide 30 in slidedeck 2a we can find two conditions for no omitted variable bias:
+
+1) The variable omitted, $\beta_2=0$ or
+2) $X_{1i}$ is uncorrelated with $X_{2i}$
+
+For 1): the true data generation process includes $\beta_2$, so by definition it is not equal to zero (otherwise it would not be part of the true data generating process.)
+
+For 2): field of study is likely to be correlated with the GPA, in other words $X_{1i}$ will most likely correlate with $X_{2i}$. From a statistical point of view, the probability that any two covariates are orthogonal is zero. We would assume that studying econ or finance is much harder because you have to take empirical methods so you will have a lower GPA.
+
+By using $Y_i=\alpha_0+\alpha_1X_{1i}+\epsilon_i$, with $field of study$ a relevant variable is omitted, therefore $\hat\alpha_1$ is likely to be biased.
+
+### c)
+
+$$\hat\alpha_1=\beta_1 + \underbrace{\beta_2}_{\textrm{impact of} \space \beta_2 \space \textrm{on} \space Y} \underbrace{\frac{cov(X_{1i},X_{2i})}{var(X_{1i})}}_{Cor(GPA,EcoFin)}$$
+\begin{align*}
+E(\hat{\alpha}_1|X) &= \beta_1 + \beta_2\hat{\beta}_{X_{2i}\space on \space X_{1i}}
+&= \beta_1 + \overbrace{\beta_2}^{\textrm{impact of} \space \beta_2 \space \textrm{on} \space Y}\overbrace{(X'_1 M_{-1}X_1)^-1X'_1M_{-1}X_{2}}^{Cor(GPA,EcoFin)}
+\end{align*}
+
+To identify the sign of the bias, we need to make assumptions on the two parts influencing the bias. *Impact of* $\beta_2$ *on Y* is assumed to be positive as the valuable skills you learned in Empirical Methods (which you had to take as part of *EcoFin*) pay off in the job market. *Correlation between GPA and EcoFin* is assumed to be negative because of the reasons we stated in b). As we multiply a positive number with a negative, the bias will be negative.
+
+### d)
+
+With $\beta_3$, the OVS bias changes to:
+
+$$E(\hat\alpha_1|X)=\beta_1+\beta_2(X'_1 M_{-1}X_1)^{-1}X'_1M_{-1}X_{2}$$
+where $(X'_1 M_{-1}X_1)^{-1}X'_1M_{-1}X_{2}$ would be the coefficient of an OLS regression of $\epsilon_{x_2}$ on $\epsilon_{x_1}$ after controlling for $x_3$.
+
+Therefore, as opposed to questions 2c and 2d, there is now a conditional correlation between $x_1$ and $x_2$ as $x_1$ is controlled for $x_3$. The interpretation of the unconditional correlation in 1c would still hold, however we cannot be sure if the conditional correlation can be interpreted as the uncoditional one. Therefore the sign of the bias cannot be confidently be identified because there is less intuition for conditional correlation.
+
+If we had to sign the conditional correlation, we would assume that the interpretation of the conditional correlation is similar to the one from the unconditional one. Under this assumption, we would conclude that the conditional covariance is negative and therefore, the addition of $x_3$ would not change our answer (i.e. the bias is still negative).
+
+The bias will be less than before as with the addition of $x_3$, fewer variance in $Y$ is left for $x_1$.
+
+# Empirical Part
+```{r results='hide'}
+indicators <- fread('indicators.csv')
+head(indicators) # Check the format
+dim(indicators) #Check length
+summary(indicators) #Explore the data
+```
+
+## b)
+```{r, message=FALSE, warning=FALSE, results='asis'}
+Model1 = mortalityun ~ corruptionun
+lm1 <- lm(Model1, data = indicators, x=TRUE)
+```
+```{r tab1, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm1, title="Regression Results UN", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Mortality"),
+ covariate.labels=c("Corruption"),
+ omit.stat=c("all"), no.space=TRUE)
+```
+
+### i)
+The p-value for a one-sided test is simply 
