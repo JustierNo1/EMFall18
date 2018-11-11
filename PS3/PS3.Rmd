@@ -1,7 +1,7 @@
 ---
-title: "Problem Set 2 Empirical Methods"
+title: "Problem Set 3 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
-date: "05.11.2018"
+date: "19.11.2018"
 output:
   pdf_document:
     extra_dependencies: dcolumn
@@ -112,12 +112,19 @@ If we had to sign the conditional correlation, we would assume that the interpre
 The bias will be less than before as with the addition of $x_3$, fewer variance in $Y$ is left for $x_1$.
 
 # Empirical Part
+
+Read data for empirical part:
 ```{r results='hide'}
 indicators <- fread('indicators.csv')
 head(indicators) # Check the format
 dim(indicators) #Check length
 summary(indicators) #Explore the data
 ```
+
+## a)
+**Child Mortality**: Every country might have a different definition of child mortality, e.g. until which age is a human defined as a child. Therefore, the UN reported measure might suffer from less bias since it proposes a unified measurement. If child mortality is self-reported, countries might have a need to present them better as they actually are, so there might be a downwards bias. Even the UN index cannot be guaranteed to be measured exactly the same way in each country, so it is likely that *child mortality* includes some measurement error.
+
+**Corruption**: the variable for corruption, *corruptionun* is a measured by the UN and therefore uses a standardized framework. However, corruption might appear in different forms and depending on the type of measurement countries may have different scores although the effective corruption is the same. Also, even with the assumption that corruption appears in the same way in every country (and can thus be measured with a standardized index), the measurement must also be enforced the same way in every country, assuming we had neutral observators in every country. A standardized index by the UN is probably the best way to measure corruption, nevertheless it is not free from a possible measurement error.
 
 ## b)
 ```{r, message=FALSE, warning=FALSE, results='asis'}
@@ -132,4 +139,27 @@ stargazer(lm1, title="Regression Results UN", type="latex", header = FALSE,
 ```
 
 ### i)
-The p-value for a one-sided test is simply 
+```{r}
+lm1$coefficients
+```
+
+The p-value for a one-sided test where $\hat\beta>0$ is simply half of the p-value reported from the two-sided test $\hat\beta=0$ which is reported by R: 
+```{r}
+anova(lm1)[1,5]/2
+```
+### ii)
+A one-unit increase in *corruptionun* increases *mortalityun* by $\sim0.63$. Given that both variables are standardized with mean zero and standard deviation one, this also equals an elasticity of 63%, a large effect.
+
+### iii)
+```{r fig.align='center', echo=FALSE}
+ggplot(indicators, aes(x=corruptionun, y=mortalityun)) +
+  theme(text = element_text(size=10, family="LM Roman 10"),
+        legend.position = "bottom")+
+  geom_point(lwd = 1.5) +
+  geom_smooth(method = "lm", se = TRUE) +
+  ggtitle("Scatter Plot with Regression line") +
+  xlab("Corruption Index UN") +
+  ylab("Child Mortality Index UN")
+```
+
+## c)
