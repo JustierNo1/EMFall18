@@ -31,8 +31,7 @@ library(sjmisc)
 #pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr,car,sjmisc) 
 
 
-knitr::opts_chunk$set(echo = TRUE, fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE,
-                      fig.height = 2, fig.width = 4)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE,fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
 sysinf <- Sys.info()
 if(sysinf['sysname'] == "Windows"){
@@ -129,13 +128,20 @@ summary(indicators) #Explore the data
 ## b)
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 Model1 = mortalityun ~ corruptionun
+Model2 = hospital_deaths ~ corruptionun
+Model3 = mortalityun ~ ruleoflaw
+Model4 = govmort ~ corruptionun
+
 lm1 <- lm(Model1, data = indicators, x=TRUE)
+lm2 <- lm(Model2, data = indicators, x=TRUE)
+lm3 <- lm(Model3, data = indicators, x=TRUE)
+lm4 <- lm(Model4, data = indicators, x=TRUE)
 ```
 ```{r tab1, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-stargazer(lm1, title="Regression Results UN", type="latex", header = FALSE,
- align=TRUE, dep.var.labels=c("Mortality"),
- covariate.labels=c("Corruption"),
- omit.stat=c("all"), no.space=TRUE)
+stargazer(lm1, lm2, lm3, lm4, title="Regression Results Empirical Exercise", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Mortality UN", "Hospital Deaths", "Mortality UN", "Mortality Gov"),
+ covariate.labels=c("Corruption UN", "Rule of Law"),
+ no.space=TRUE)
 ```
 
 ### i)
@@ -151,7 +157,7 @@ anova(lm1)[1,5]/2
 A one-unit increase in *corruptionun* increases *mortalityun* by $\sim0.63$. Given that both variables are standardized with mean zero and standard deviation one, this also equals an elasticity of 63%, a large effect.
 
 ### iii)
-```{r fig.align='center', echo=FALSE}
+```{r fig.align='center', echo=FALSE, warning=FALSE}
 ggplot(indicators, aes(x=corruptionun, y=mortalityun)) +
   theme(text = element_text(size=10, family="LM Roman 10"),
         legend.position = "bottom")+
@@ -163,3 +169,33 @@ ggplot(indicators, aes(x=corruptionun, y=mortalityun)) +
 ```
 
 ## c)
+
+### i)
+The conditions for classical measurement error are $E(\eta_i|x_i^*)=0$ and $E(\eta_i|\epsilon_i^*)=0$. It seems reasonable to assume that the later is fulfilled, a correlation between the measurement error $\eta_i$ and the true error term $\epsilon_i^*$ seems unlikely, at least there is no obvious reason for it. There might be the possibility that $E(\eta_i|x_i^*) \neq0$ as the $\eta_i$ could increase (decrease) with $x_i$ (and hence $Cov(x_i,\epsilon_i+\eta_i)\neq0$), however as we are willing to assume that the measurement error is random, we can also state that this condition is fulfilled.
+
+By using the derivation of slide 86 in the lecture notes (topic 2a), we find that in such a case:
+$$\hat\beta=\beta*\frac{\sigma^2_{x^*}}{\sigma^2_{x^*}+\sigma^2_{\eta}}=\lambda\beta$$
+Where $x^*$ is the true variable (i.e. $mortalityun$) and $\eta$ is the measurement error. We assume $\beta$ to be positive with the reasoning that higher corruption leads to less efficient health care with child mortality in turn. Therefore, $\hat\beta$ is dragged towards zero by the measurement error and results in a negative bias on our estimator. The higher the measurement error, the larger our negative bias.
+
+We also expect the variance of the coefficient to go up since $V(x)=\sigma^2_{x^*}+\sigma^2_{\eta}$ (by slide 85 of topic 2a).
+
+### ii)
+We compare column (1) to column (2) in Table 1 and see that our expectation has been confirmed: the coefficient of $Corruption UN$ has decreased from $0.626$ to $0.528$. Second, we also note that the variance has gone up from $0.083^2$ to $0.091^2$, so our expectations were fully confirmed.
+**Explain??? Explanation given above?**
+
+### iii)
+```{r fig.align='center', echo=FALSE, warning=FALSE}
+ggplot(data=indicators) +
+  theme(text = element_text(size=10, family="LM Roman 10")) +
+  geom_point(aes(x=corruptionun,y=mortalityun, colour="UN Index")) +
+  geom_point(aes(x=corruptionun, y=hospital_deaths, colour="Hospital Index")) +
+  geom_smooth(aes(x=corruptionun, y=mortalityun, color = "UN Index", fill="UN Index"),
+              method = "lm", se = TRUE, alpha = 0.25) +
+  geom_smooth(aes(x=corruptionun, y=hospital_deaths, color = "Hospital Index",
+              fill="Hospital Index"), method = "lm", se = TRUE, alpha = 0.25) +
+  labs(title = "Scatter Plot with true x and x with measurement error", x= "Corruption Index UN", y="Child Mortality") +
+  scale_colour_manual(name="legend", values=c("red", "blue"))+
+  scale_fill_manual(name="legend", values=c("red", "blue"))
+```
+
+The standard error of the estimate on $mortalityun$ (0.083) is lower than the one for $hospital deaths$ (0.091). Larger standard errors result in larger confidence intervals, which is also confirmed by the figure. This aligns with our expectations. Also, the red scatters (variable with measurement error) are more spread out than the blue ones (true variable), which again confirms our expectation that variance in $hospital deaths$ will be higher than in $mortalityun$.
