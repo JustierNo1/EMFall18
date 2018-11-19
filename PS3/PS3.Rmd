@@ -3,10 +3,10 @@ title: "Problem Set 3 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "19.11.2018"
 output:
-  pdf_document:
-    extra_dependencies: dcolumn
   html_document:
     df_print: paged
+  pdf_document:
+    extra_dependencies: dcolumn
 ---
 
 ```{r global options, include=FALSE}
@@ -138,7 +138,7 @@ lm3 <- lm(Model3, data = indicators, x=TRUE)
 lm4 <- lm(Model4, data = indicators, x=TRUE)
 ```
 ```{r tab1, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-stargazer(lm1, lm2, lm3, lm4, title="Regression Results Empirical Exercise", type="latex", header = FALSE,
+stargazer(lm1, lm2, lm3, lm4, title="Regression Results Empirical Exercise", type="text", header = FALSE,
  align=TRUE, dep.var.labels=c("Mortality UN", "Hospital Deaths", "Mortality UN", "Mortality Gov"),
  covariate.labels=c("Corruption UN", "Rule of Law"),
  no.space=TRUE)
@@ -159,7 +159,7 @@ A one-unit increase in *corruptionun* increases *mortalityun* by $\sim0.63$. Giv
 ### iii)
 ```{r fig.align='center', echo=FALSE, warning=FALSE}
 ggplot(indicators, aes(x=corruptionun, y=mortalityun)) +
-  theme(text = element_text(size=10, family="LM Roman 10"),
+  theme(text = element_text(size=10),
         legend.position = "bottom")+
   geom_point(lwd = 1.5) +
   geom_smooth(method = "lm", se = TRUE) +
@@ -186,7 +186,7 @@ We compare column (1) to column (2) in Table 1 and see that our expectation has 
 ### iii)
 ```{r fig.align='center', echo=FALSE, warning=FALSE}
 ggplot(data=indicators) +
-  theme(text = element_text(size=10, family="LM Roman 10")) +
+  theme(text = element_text(size=10)) +
   geom_point(aes(x=corruptionun,y=mortalityun, colour="UN Index")) +
   geom_point(aes(x=corruptionun, y=hospital_deaths, colour="Hospital Index")) +
   geom_smooth(aes(x=corruptionun, y=mortalityun, color = "UN Index", fill="UN Index"),
@@ -199,3 +199,24 @@ ggplot(data=indicators) +
 ```
 
 The standard error of the estimate on $mortalityun$ (0.083) is lower than the one for $hospital deaths$ (0.091). Larger standard errors result in larger confidence intervals, which is also confirmed by the figure. This aligns with our expectations. Also, the red scatters (variable with measurement error) are more spread out than the blue ones (true variable), which again confirms our expectation that variance in $hospital deaths$ will be higher than in $mortalityun$.
+
+## d 
+```{r fig.align='center', echo=FALSE, warning=FALSE}
+stargazer(lm3, header = FALSE, type = "latex") #Regression table 
+stargazer(lm1,lm2,lm3,lm4, header = FALSE, type = "latex") # Regression table of mortality on rule fo law + comparison with question 1b
+```
+
+The coefficient rule of law is 0.361 (see column 3) and significantly smaller if compared to the coefficient of corruption which is 0.626 (see column 1). This result, however, is not a surprise. In the case of a classical measurement error in the independent variable, the estimate is biased towards zero which results in an attenuation bias of the indipented variable. In this specific circumstances, it is the case because we are assuming that any error between the UN corruption index and  UN index for Rule of Law is random.
+
+## e
+### i)
+The setting is similar to question 2 in the paper and pencil part because there is as well a measurement error in the dependent variable. Although, as we assume that the classical measurement error conditions do not hold, it is not possible to consider it equivalent. In this case, we assume that the measurement error correlates to the independent variable corruption UN. Countries with a higher corruption index are more likely to report falsified figures regarding child mortality.
+
+### ii)
+The sign of the bias will probably be negative since the covariance between corruption and the measurement error in govmort is negative. A plausible story for this results could be that the countries with higher corruption index have incentives to falsify their statistics to show better performances given a lower child mortality rate than in reality.
+
+### iii)
+The estimate of corruption UN is 0.358 (see column 4)  which is again lower if compared to the question 1.b. As suspected, the coefficient is downwards biased due to the negative correlation between corruption and measurement error. 
+
+## f
+The worst case possible is when you mistakenly assume that an estimator is unbiased whereby it is biased. In this example, the worst case is (c) because we assumed that the classical measurement error conditions are holding. This assumption is rather "strong"  since there is the possibility that our measurement error correlates with the true error term. Especially in poorer countries, children have less access to hospitals than in richer one. Thus, the important variable wealth causes a bias, because we don’t control for it. As a consequence, we wrongly assume that the estimator is unbiased when it is biased.
