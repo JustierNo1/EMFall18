@@ -3,10 +3,10 @@ title: "Problem Set 3 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "19.11.2018"
 output:
-  pdf_document:
-    extra_dependencies: dcolumn
   html_document:
     df_print: paged
+  pdf_document:
+    extra_dependencies: dcolumn
 ---
 
 ```{r global options, include=FALSE}
@@ -114,6 +114,40 @@ If we had to sign the conditional correlation, we would assume that the interpre
 
 The bias will be less than before as with the addition of $x_3$, fewer variance in $Y$ is left for $x_1$.
 
+## 3. Measurement Error in y
+### a)
+
+First of all, we derive the relationship between $\epsilon_i,\epsilon_i^*$ and $\eta_i$. Thus, we have:
+$$\epsilon_i = y_i - \alpha_i -\beta x_i' $$
+Plugging in the value of $y_i$ in the equation above we have: 
+\begin{align*}
+
+\epsilon_i &= y_i^* + \eta_i - \alpha_i - \beta x_i' \\
+&= \underbrace{y_i^* - \alpha_i -\beta x_i'}_{\epsilon_i^*} + \eta_i = \epsilon_i^* +  \eta_i
+\end{align*}
+
+So it is possible to calculate the mean and the variance of $\epsilon_i$
+
+Mean: 
+
+$$ E[\epsilon_i ] =  E[\epsilon_i^* +  \eta_i ] =  E[\epsilon_i^*] +  E[\eta_i ] = 0 + 0 = 0 $$
+Variance: 
+$$ Var[\epsilon_i ] =   Var[\epsilon_i^* +  \eta_i ] =  Var[\epsilon_i^*] +  Var[\eta_i ] + 2 Cov(\epsilon_i^*,\eta_i) = \sigma^2_* +  \sigma^2_\eta $$
+Note that the $Cov(\epsilon_i^*,\eta_i)$ is 0 because of the conditional expectaion of $\epsilon_i^*$ and $\eta_i$ is also 0. 
+
+### b)
+
+We know that an estimator is unbiased only if the expected value of $\hat{\beta}$ is $\beta$ itself. So, we calculate $E[\hat{\beta}]$:
+
+\begin{align*}
+E[\widehat{\beta}] &= E[\beta + (X'X)^{-1}X'\epsilon_i] \\
+&= \beta + (X'X)^{-1}X'E[\epsilon_i] \\
+&= \beta + (X'X)^{-1}X'E[\epsilon_i^* + \eta_i] \\
+&= \beta + (X'X)^{-1}X'\underbrace{E[\epsilon_i]}_{\text{=0, under A2}} +  (X'X)^{-1}X'\underbrace{E[\eta_i]}_{\text{=0, given}} = \beta \\
+\end{align*}
+
+Therefore, we can conclude that the estimator is not biased.
+
 # Empirical Part
 
 Read data for empirical part:
@@ -209,6 +243,9 @@ The setting is similar to question 3 in the paper and pencil part because there 
 
 ### ii)
 The sign of the bias will probably be negative since the covariance between corruption and the measurement error in govmort is negative. A plausible story for this results could be that the countries with higher corruption index have incentives to falsify their statistics to show better performances given a lower child mortality rate than in reality.
+
+
+$$ E[\widehat{\beta}] = \beta + (X'X)^{-1}X'\underbrace{E[\epsilon_i]}_{=0} +  (X'X)^{-1}X'\underbrace{E[\eta_i]}_{< 0} = (X'X)^{-1}X'E[\eta_i] < \beta $$
 
 ### iii)
 The estimate of corruption UN is 0.358 (see column 4)  which is again lower if compared to the question 1.b. As suspected, the coefficient is downwards biased due to the negative correlation between corruption and measurement error. 
