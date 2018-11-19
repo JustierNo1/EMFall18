@@ -150,18 +150,14 @@ stargazer(lm1, lm2, lm3, lm4, title="Regression Results Empirical Exercise", typ
 
 ## b)
 
-### i)?
+### i)
+
+The OLS estimate ($\hat\beta$) of the relationship between corruption and child mortality is 0.626 (see Table 1, column 1):
 ```{r}
 lm1$coefficients
 ```
 
-The p-value for a one-sided test where $\hat\beta>0$ is simply half of the p-value reported from the two-sided test $\hat\beta=0$ which is reported by R:
-```{r}
-anova(lm1)
-```
-```{r}
-anova(lm1)[1,5]/2
-```
+To test whether $\hat\beta>0$, we can perform a one side test with $H_0: \hat\beta <0$ and $H_1: \hat\beta \geq0$. Given the t-value of `r summary(lm1)$coefficients[2,3]` and 89 degrees of freedom, we can look up the probability to find a t-value higher than `r summary(lm1)$coefficients[2,3]` in a percentage t-disribution table. In the table, we find that this probability is equal to 0 (i.e. the p-value is 0). Hence the likelihood that we fail to reject the null hypothesis 0% and we can reject that $\hat\beta<0$.
 ### ii)
 A one-unit increase in *corruptionun* increases *mortalityun* by $\sim0.63$. Given that both variables are standardized with mean zero and standard deviation one, this also equals an elasticity of 63%, a large effect.
 
