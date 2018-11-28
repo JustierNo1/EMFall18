@@ -1,0 +1,66 @@
+---
+title: "Problem Set 4 Empirical Methods"
+author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
+date: "16.12.2018"
+output:
+  pdf_document:
+    extra_dependencies: dcolumn
+  html_document:
+    df_print: paged
+---
+
+```{r global options, include=FALSE}
+library(knitr)
+library(Cairo)
+library(extrafont)
+library(latex2exp)
+library(readstata13)
+library(Hmisc)
+library(lmtest)
+library(stargazer)
+library(kableExtra)
+library(ggplot2)
+library(data.table)
+library(tidyr)
+library(formatR)
+library(dplyr)
+library(car)
+library(sjmisc)
+
+#install.packages("pacman")
+#pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr,car,sjmisc) 
+
+
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE,fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+sysinf <- Sys.info()
+if(sysinf['sysname'] == "Windows"){
+  extrafont::loadfonts(device="win")
+  #opts_chunk$set(dev = "CairoPDF")
+}
+```
+
+
+# Paper and Pencil Questions
+
+## Motivating Linear Panel Data
+
+# Empirical Applications
+
+## IV Regression
+
+```{r results='hide'}
+BCHHS <- fread('BCHHS.csv')
+head(BCHHS) # Check the format
+dim(BCHHS) #Check length
+summary(BCHHS) #Explore the data
+```
+
+## Basic Panel Data Methods
+
+```{r results='hide'}
+Gasoline <- fread('Gasoline.csv')
+head(Gasoline) # Check the format
+dim(Gasoline) #Check length
+summary(Gasoline) #Explore the data
+```
