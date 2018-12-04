@@ -45,6 +45,28 @@ if(sysinf['sysname'] == "Windows"){
 
 ## Motivating Linear Panel Data
 
+### (a)
+
+\begin{align*}
+\pi(x_{it},\alpha_{i})&=P_t(y_{it})-W_t(x_{it}) \\
+&=P_t(\beta x_{it} + \alpha_{i} + \lambda) - W_tx_{it} \tag{as $Ee^{\epsilon_{it}}=\lambda$}
+\end{align*}
+
+Form the profit function and maximize with respect to $x$ to solve the farmer's profit optimization problem:
+
+\begin{align*}
+\frac{\partial \pi(x_{it},\alpha_{i})}{\partial x_{it}}=P_t \beta - W_t x_{it} &{\overset{!}{=}} 0 \tag{F.O.C.} \\
+\frac{P_t \beta}{W_t} &= x_{it}
+\end{align*}
+
+The labor demand $x_{it}$ depends on the price $P_t$, labor demand coefficient $\beta$ and wages $W_t$. Therefore, labor demand does not depend on soil quality $\alpha_i$.
+
+Economic intuition: If prices are rising, farmers should produce more (this also aligns with any basic supply function). When wages rise, the optimal output will be less. Note that at this point, $\beta$ has not yet been defined (and the farmer's production function does not need to be linear at this point, we cannot be sure it is an OLS coefficient). Nevertheless we assume that $\beta$ is some kind of input-output elasticity, a factor by how much $labor$ is turned into $output$. If this factor increases, it pays for the farmer to demand more working hours.
+
+### (b)
+
+Any OLS-equation is required to be linear. However, production functions can hardly assumed to be linear. For example, it is hard to imagine that the return from additional $labor$ input remains constant at any level of $labor$, we would reason that additional $labor$ input returns decreasing marginal $output$.
+
 # Empirical Applications
 
 ## IV Regression
@@ -52,6 +74,8 @@ if(sysinf['sysname'] == "Windows"){
 ```{r results='hide'}
 BCHHS <- fread('BCHHS.csv')
 head(BCHHS) # Check the format
+BCHHS$lnearn <- log(BCHHS$earning) #create log earnings
+BCHHS$agesq <- sqrt(BCHHS$age) #create age squared
 dim(BCHHS) #Check length
 summary(BCHHS) #Explore the data
 ```
