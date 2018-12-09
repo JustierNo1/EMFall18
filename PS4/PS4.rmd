@@ -3,10 +3,10 @@ title: "Problem Set 4 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "16.12.2018"
 output:
-  pdf_document:
-    extra_dependencies: dcolumn
   html_document:
     df_print: paged
+  pdf_document:
+    extra_dependencies: dcolumn
 ---
 
 ```{r global options, include=FALSE}
@@ -26,9 +26,11 @@ library(formatR)
 library(dplyr)
 library(car)
 library(sjmisc)
+library(plm)
+
 
 #install.packages("pacman")
-#pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr,car,sjmisc) 
+#pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr,car,sjmisc,plm) 
 
 
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE,fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE)
@@ -88,3 +90,66 @@ head(Gasoline) # Check the format
 dim(Gasoline) #Check length
 summary(Gasoline) #Explore the data
 ```
+
+### (a)
+### (b)
+```{r}
+Gasoline <- fread('Gasoline.csv')
+#Y <- cbind(c,data=Gasoline)
+#X <- cbind(y,p,car,data=Gasoline)
+
+# Set data as panel data
+pdata <- pdata.frame(Gasoline, index=c("co","year"))
+summary(pdata)
+length(year)
+
+
+# Descriptive statistics
+#summary(Y)
+#summary(X)
+
+# Pooled OLS estimator
+pooling <- plm(c ~ y+p+car, data=pdata, model= "pooling")
+summary(pooling)
+
+stargazer(pooling, type="text", title="Pooled OLS Results",
+          dep.var.labels=c("Gas per car consumption"),
+          covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE)
+
+
+# Between estimator
+between <- plm(c ~ y+p+car, data=pdata, model= "between")
+summary(between)
+
+# First differences estimator
+firstdiff <- plm(c ~ y+p+car, data=pdata, model= "fd")
+summary(firstdiff)
+
+# Fixed effects or within estimator
+fixed <- plm(c ~ y+p+car, data=pdata, model= "within")
+summary(fixed)
+
+# Random effects estimator
+random <- plm(c ~ y+p+car, data=pdata, model= "random")
+summary(random)
+
+# LM test for random effects versus OLS
+plmtest(pooling)
+
+# LM test for fixed effects versus OLS
+pFtest(fixed, pooling)
+
+# Hausman test for fixed versus random effects model
+phtest(random, fixed)
+
+# LSDV Model
+lsdv.model <- lm(c ~ y+p+car + as.factor(co), data=pdata, na.action=na.omit)
+summary(lsdv.model)
+
+
+stargazer(pooling, lsdv.model,fixed, type="text", title="Pooled OLS Results",
+          dep.var.labels=c("Gas per car consumption"),
+          covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE)
+
+```
+
