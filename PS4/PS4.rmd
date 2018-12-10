@@ -157,30 +157,102 @@ summary(Gasoline) #Explore the data
 ```
 
 ### (a)
+$ln\left(\dfrac{Gas}{Car}\right)_{it}$ is the gasoline consume per car in the 18 OECD countries over the 19 years. The variables $ln\left(\dfrac{Y}{N}\right)_{it}$  (per capita income) and $ln\left(\dfrac{P_{MG}}{P_{GDP}}\right)_{it}$ (gasoline price) are relevant because they reflect the utilization of autos. In specific, countries with an higher per capita incame use the car more because they can afford to own a car and to use it often. On the other hand, in countries with lower income per capita people will prefer to use the cheaper transportation means when possible. Thus, a positive sign is expected for this variable.[^1] The last variable $ln\left(\dfrac{Car}{N}\right)_{it}$ captures the stock of cars per capita. The rising stock of cars per capita is likely to lead to reduced auto utilization. This is pretta intuitive: (using the same example of the autors of the paper) the two-car family does not drive twice the miles of a one-car family.
+
+[^1]:However, it might be possible to have a negative sign. Assuming that countries with an higher income pro capita have better public transport and more urbanized city centers -e.g Switzerland- people will be more willing to use more public transportations or bike to avoid traffic jam. Thus, the gasoline consume decreases with the increase with the increase of income per capita. 
+
 ### (b)
-```{r}
+```{r results='hide'}
 Gasoline <- fread('Gasoline.csv')
 #Y <- cbind(c,data=Gasoline)
 #X <- cbind(y,p,car,data=Gasoline)
 
 # Set data as panel data
 pdata <- pdata.frame(Gasoline, index=c("co","year"))
-summary(pdata)
-length(year)
-
-
-# Descriptive statistics
-#summary(Y)
-#summary(X)
 
 # Pooled OLS estimator
 pooling <- plm(c ~ y+p+car, data=pdata, model= "pooling")
-summary(pooling)
 
+```
+```{r}
 stargazer(pooling, type="text", title="Pooled OLS Results",
           dep.var.labels=c("Gas per car consumption"),
           covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE)
+```
+### (c)
+The estimating equation for a general Pooled OLS is $y_{it} = x'_{it} \beta + \alpha_{i} + \upsilon_{it}$ where the dummy variables $d_{t}$ are included into $x_{it}$ and the error term is $\upsilon_{it} =\alpha_{i} + \epsilon_{it}$ . This means that we are ignoring the unobserved heterogeneity $\alpha_{i}$ - which representes some individual caracteristic costant across time (this is why there is only "i" and not "t" associated to this term). Therefore, the assumptions behind the Pooled OLS to have a consistent estimator are:
 
+- Contemporaneous Exogeneity 
+\begin{align*}
+Cov(x_{it},\epsilon_{it})= 0 \quad \text{with} \quad t=1,...,T
+\end{align*}
+
+- and Uncorrelated Effects
+\begin{align*}
+Cov(x_{it},\alpha_{i})= 0 \quad \text{with} \quad t=1,...,T
+\end{align*}
+
+In this context the uncorrelated effects assumption is not likely to be satisfided. For instance, factors such as the average distance from working place can be correlated with the number of cars a family ownes. Given that in an average family with 3 membes, 2 of them are working far away from home, it is more likely that they will own more than a car. Other causes of endogeinty can be: how developed the public transportation network is or how strong is the driving culture in a country. Given a country with a well developed public transportation system, the sensibility of people for increases in gasoline price will be high. On the other hand, given a strong car driving culture, the sensibility of people for increases in gasoline price will be low. Since the assumptions are not likely to be fulfilled, the OLS estimator will be biased.
+
+### (d) 
+Truth:    
+\begin{align*}
+y = X\beta + (\gamma)\alpha + \epsilon
+\end{align*}
+
+
+Paper estimate:    
+\begin{align*}
+y = X\beta + \epsilon 
+\end{align*}
+
+Thus,
+
+\begin{align*}
+E(\hat\beta) &= \beta + \gamma(X'X)^{-1}X'\alpha \\
+&= \beta + \gamma \hat{\beta_{\alpha-on-X}}
+\end{align*}
+
+Where $\gamma$ is the (implicit) sign of impact of $\alpha_i$ on $y_i$ and $\hat\beta_{\alpha-on-X}$ measures the correlation between $\alpha_i$ and $x_i$
+The direction can be both positive and negative depending on the OVB we analize. 
+
+1. Negative bias
+In case the unobserved factor is how well developed public transportation network is in a country: 
+
+- $\gamma$ will be negative -> the more developed the network is, the less people will use the car and also less will be the consumption of gasoline
+- $\hat\beta_{\alpha-on-X}$ will be positive -> an increase in gasoline price will result in more people using the public transportation, so higher revenues for public transportation companies. They will invest more in the development of the network, leading to an increase in a better developed public transportation network. 
+
+2. Positive bias
+In case the unobserved factor is how strong the driving culture in a country:
+
+- $\gamma$ will be positive -> the stronger the driving culture, the more people will drive, the more the consume in gasoline per car
+- $\hat\beta_{\alpha-on-X}$ will be positive -> the stronger the driving culture, the more people will drive. This leads to an higher demand for gasoline which will raise the price of the gasoline. 
+
+###(e)
+####(e.i) The LSDV EStimator
+```{r}
+# LSDV Model
+lsdv.model <- lm(c ~ y+p+car + as.factor(co), data=pdata, na.action=na.omit)
+```
+####(e.ii) Fixed Effects
+```{r}
+# Fixed effects or within estimator
+fixed <- plm(c ~ y+p+car, data=pdata, model= "within")
+```
+####(e.iii) Random Effects
+```{r}
+# Random effects estimator
+random <- plm(c ~ y+p+car, data=pdata, model= "random")
+```
+
+```{r}
+stargazer(pooling, lsdv.model,fixed, random, type="text", title="Comparison of Results",
+          dep.var.labels=c("Gas per car consumption"),
+          covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE)
+```
+
+
+```{r, include=FALSE}
 
 # Between estimator
 between <- plm(c ~ y+p+car, data=pdata, model= "between")
@@ -215,6 +287,5 @@ summary(lsdv.model)
 stargazer(pooling, lsdv.model,fixed, type="text", title="Pooled OLS Results",
           dep.var.labels=c("Gas per car consumption"),
           covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE)
-
 ```
 
