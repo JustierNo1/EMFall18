@@ -3,10 +3,10 @@ title: "Problem Set 4 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "16.12.2018"
 output:
-  html_document:
-    df_print: paged
   pdf_document:
     extra_dependencies: dcolumn
+  html_document:
+    df_print: paged
 ---
 
 ```{r global options, include=FALSE}
@@ -65,8 +65,9 @@ The farmer will maximize his profit by changing the input factor $x_{it}$, there
 \end{align*}
 
 To find the expected profit function, we use the hint $\lambda=Ee^{\epsilon_{it}}$:
+
 \begin{align*}
-E(y_{it}|x_{it}) &= E(x_{it}^{\beta} \alpha_i e^{\epsilon_{it}})
+E(y_{it}|x_{it}) &= E(x_{it}^{\beta} \alpha_i e^{\epsilon_{it}}) \\
 &= x_{it}^{\beta} \alpha_i E(e^{\epsilon_{it}}) \\
 &= x_{it}^{\beta} \alpha_i \lambda
 \end{align*}
@@ -74,16 +75,15 @@ E(y_{it}|x_{it}) &= E(x_{it}^{\beta} \alpha_i e^{\epsilon_{it}})
 Now maximize the profit function using the hint above:
 
 \begin{align*}
-\max{E(\pi_{it}|x_{it}) &= E(P_t y_{it} - W_t x_{it} | x_{it})} \\
+\max{E(\pi_{it}|x_{it})} &= E(P_t y_{it} - W_t x_{it} | x_{it}) \\
 &= P_t (x_{it}^{\beta} \alpha_{i} \lambda) - W_t x_{it}
 \end{align*}
 
 \begin{align*}
 \frac{\partial \pi_{it}}{\partial x_{it}}= \beta P_t x_{it}^{\beta-1} \alpha_i \lambda - W_t &{\overset{!}{=}} 0 \tag{F.O.C.} \\
-x_{it}^{\beta-1} &= \frac{W_t}{\beta P_t \alpha_i \lambda} \\
+(x_{it})^{\beta-1} &= \frac{W_t}{\beta P_t \alpha_i \lambda} \\
 x_{it} &= \left(\frac{\beta P_t \alpha_i \lambda}{W_t}\right)^{\beta-1}
 \end{align*}
-
 
 The labor demand $x_{it}$ depends on wages $W_t$, the labor demand coefficient $\beta$, prices $P_t$, soil quality $\alpha_i$ and rainfall $\epsilon_{it}$.
 
@@ -132,6 +132,7 @@ ii)
 The constant could be interpreted as average log earnings when everything else is zero, in other words the average log earnings of newborns with zero education. Since this does not really make sense, there is no important information contained in that coefficient.
 
 iii)
+
 *First Model:* A one year increase in education increases earnings by approximately 7.7% (or technically, by $100(e^{\beta_2}-1)\%$, `r 100*(exp(lm1$coefficients[2])-1)`%. A one year increase in age increases earnings by approximately 7.8%. However, age has a decreasing marginal effect showed in age squared: a one-unit increase in age squared decreases earnings by approximately 0.1%. The turning point of age can be found by $-\frac{\beta_3}{2\beta_4}=40.21$, after this age the effect of age on earnings becomes negative.
 
 *Second Model:* The interpretation is the same as for the first model (with slightly different numbers), only that instead of actual education, an instrumental variable is used: a one year increase in reported education increases earnings by approximately 5.5%. The turning point is approximately half a year earlier, at 39.6 years.
@@ -143,9 +144,149 @@ i)
 - Omitted Variable Bias: the model wants to estimate the effect of schooling on income. However, without controls years of education could simply be a proxy for ability, as more intelligent individuals attend university and therefore have more years of education.
 
 ii)
-- Measurement Error: assuming that we have a classical measurement error, this would result in an attenuation bias of the independent variable, i.e. a positive bias (the coefficient is larger than it actually is)
+- Measurement Error: assuming that we have a classical measurement error, this would result in an attenuation bias of the independent variable, i.e. a negative bias (the coefficient is smaller than it actually is)
 
 - OVB: Ability is likely to be positively correlated with earnings since higher skilled individuals can take more demanding jobs (hence earn more). Education will also be positively correlated with ability (see reasoning above). Therefore, the sign of the bias is positive.
+
+iii)
+Instrument relevance is given by:
+
+$$\frac{1}{N}Z'X=\frac{1}{N}\sum_{i=1}^{N}z_ix_i' \space \xrightarrow{p} \space E(z_ix_i') \equiv\Sigma zx \neq0$$
+
+And instrument exogeneity by:
+
+$$\frac{1}{N}Z'\epsilon=\frac{1}{N}\sum_{i=1}^{N}z_i \epsilon_i'\space \xrightarrow{p} \space E(z_i\epsilon)=0$$
+
+For relevance, both reasons can be evaluated at once: it is save to assume that $twihigh$ is correlated with $highqua$, so the instrument $z$ moves the endogenous $x_i$, it therefore is relevant. Regarding exogeneity, the answers differ on the reason:
+- Measurement Error: it is hard imagine that the error $\epsilon_i$ is correlated with the twin's estimates $highqua$. This makes $highqua$ a relevant and exogenous instrument regarding measurement error and should remove the negative bias from measurement error.
+- OVB: the twin's estimate $highqua$ still contain the omitted variable $ability$, therefore $Cov(z_i,\epsilon_i)\neq0$ which makes the instrument endogenous. In other words, using $highqua$ as an instrument will remove the positive bias from measurement error but not the negative bias from the omitted variable $ability$.
+
+iv.)
+The coefficient of education with the endogenous measure $highqua$ is 0.077 wheras with the IV regression it decreases to 0.055. With the reasoning above, the coefficient on education of the IV is expected to increase as it should remove (at least partly) negative the measurement error but not the positive error due to the omitted $ability$. However, the coefficient changes in the other direction. The reason for this might be that that the measurement error in $twihigh$ could even be larger than in $highqua$. However, if we compare the same coefficients in the author's table, we see that the coefficient moves in the direction we expected. The coefficient however should still be positively biased by the omitted variable $ability$.
+
+v.)
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+FSR <- highqua ~ twihigh
+
+lmFSR <- lm(FSR, data = BCHHS, x=TRUE)
+```
+```{r tab2, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lmFSR, title="First Stage regression IV", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Education"),
+ covariate.labels=c("Twin estimate of education"),
+ omit.stat=c("all"),
+ report = ("vc*t"),
+ no.space=TRUE)
+```
+
+The working definition of a "weak" estimator is an estimator with an F-statistic below 10, or a t-statistic below 3.16. With an t-statistic of $331.9>18.219$, the instrument is not considered as "weak" by the working definition.
+
+vi.)
+The problem with the instrument is that it sufficiently shifts $x_i$, but it does not remove the problem of the omitted variable $ability$. It is quite possible that $ability$ is not the only omitted variable, maybe the wage is also influenced by regional factors, state of the economy and so on. In an ideal world, the instrument would shift only education while all other variables remain constant (i.e. ability, regional factors etc.). Therefore, we believe that the education coefficient of the IV regression is at best an "upper bound" of the effect of education on wages: it is likely that still includes positive bias but it improves the credibility by removing the measurement error.
+
+### c)
+
+Reshape the data:
+
+```{r}
+BCHHS_wide <- reshape(BCHHS, timevar = "twinno", idvar = "family", direction="wide")
+BCHHS_wide$dlnearn <- BCHHS_wide$lnearn.1-BCHHS_wide$lnearn.2
+BCHHS_wide$dhigh <- BCHHS_wide$highqua.1-BCHHS_wide$highqua.2
+BCHHS_wide$dtwihigh <- BCHHS_wide$twihigh.1-BCHHS_wide$twihigh.2
+```
+
+Generate the regressions:
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+Model3 = dlnearn ~ dhigh + 0
+Model4 = dlnearn ~ dtwihigh + 0
+Model5 = dlnearn ~ dhigh
+Model6 = dlnearn ~ dtwihigh
+
+lm3 <- lm(Model3, data = BCHHS_wide, x=TRUE)
+lm4 <- lm(Model4, data = BCHHS_wide, x=TRUE)
+lm5 <- lm(Model5, data = BCHHS_wide, x=TRUE)
+lm6 <- lm(Model6, data = BCHHS_wide, x=TRUE)
+```
+```{r tab3, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm3, lm4, lm5, lm6, title="Regression Results Earnings within twins with and without IV", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Log Wage Difference"),
+ column.labels = c("OLS", "IV", "OLS", "IV"),
+ covariate.labels=c("Education", "Education Instrument"),
+ omit.stat=c("all"),
+ no.space=TRUE)
+```
+
+i.)
+Because the difference in age measured in years between two twins is always zero (the current record age difference between twins is 85 days, see [here](https://www.nursingschools.net/blog/2010/10/20-amazing-facts-about-twins/)). Therefore, all values for $age$ and $agesq$ would be zero and we would include a variable without any variability.
+
+ii.)
+The constant is the average log wage difference if all $\beta$ are set to 0. The constant becomes redudant if we assume that any difference in the dependent variable can only be caused by one of the independent variables. By taking the differences between students, we control for any OVB that is caused by $ability$, as the background and genetic setting from twins is identical. Therefore, we would expect that any difference in wages can only caused by a difference in education and we construct the regression in a way the difference in wage is zero if education is also zero.
+
+The estimated coefficient might have an insignificant effect as almost all of the factors affecting wage should be included by the independent variable education and the fact that differences between twins are used. Since we took the absolute difference in log wage, the constant should also become positive.
+
+Interestingly, the coefficients are more significant than their counterparts in the pooled regression. It seems to be that, after controlling for $ability$ differences, other factors become significant and are captured in the constant. As expected, the coefficients become positive.
+
+iii.)
+By taking the difference in education between twins, differences in education can no longer be explained through $ability$ as both twins should have the same genetic ability and socio-economic background. Education is now simply the difference in school years and no longer the difference in school years and $ability$ (as it was in the pooled OLS).
+
+This directly adresses the endogeneity concern of the OVB and as expected the coefficient on education increases from 0.077 to 0.122 (in IV from 0.055 to 0.123) which confirms the expectation of a positive bias due to OVB.
+
+We also note that using IV now removes the negative bias of measurement error since the coefficient of education increases in the regression with the instrumental variable.
+
+iv.)
+Combining the within-twins and IV approach, both sources of bias (measurement error and OVB) should be removed. By using such an approach, one should receive the causal relationship between education and $dlnearn$ and the estimate can be interpreted as the return of education to earnings. Another advantage comes by comparing the OLS and IV regression; the difference between the education coefficients hints at the size of the measurement error bias.
+
+In our setting, the IV approach did not have the intended effect, it could not remove the negative bias due to measurement error in a pooled regression. In the differences-model, using an IV increases the coefficient on education only marginally, so we still assume that a measurement error is present.
+
+v.)
+Taking the differences between twins should remove any ability bias as the twins have the same genetic and socio-economic background. Nevertheless, measurement error might still be a problem as there is no reason to assume that the twin's estimate of education should suffer from less measurement error than the education reported from the individual itself. The estimates are certainly more credible than the ones from a pooled OLS, however to obtain the true causal effect of education it is necessary to use a variable that does not suffer from measurement error.
+
+### d)
+
+```{r}
+BCHHS_wide$absearn <- abs(BCHHS_wide$earning.1-BCHHS_wide$earning.2)
+BCHHS_wide_no_outliers <- dplyr::filter(BCHHS_wide, absearn <= 60)
+
+#if 4 families were removed, this should equal 4:
+nrow(BCHHS_wide)-nrow(BCHHS_wide_no_outliers)
+```
+
+Run the regressions:
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+Model7 = dlnearn ~ dhigh + 0
+Model8 = dlnearn ~ dtwihigh + 0
+
+lm7 <- lm(Model3, data = BCHHS_wide_no_outliers, x=TRUE)
+lm8 <- lm(Model4, data = BCHHS_wide_no_outliers, x=TRUE)
+```
+```{r tab4, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm7, lm8, title="Regression Results Earnings without outliers", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Log Wage Difference"),
+ column.labels = c("OLS", "IV"),
+ covariate.labels=c("Education", "Education Instrument"),
+ omit.stat=c("all"),
+ no.space=TRUE)
+```
+
+i.)
+The coefficients decrease from 0.039 to 0.028 (OLS) and from -0.053 to -0.025, hence the magnitude decreases. Also, while the estimates were significant at the 10 (OLS) and 5 (IV) percent level, both OLS and IV are now not significant at the 10 percent level.
+
+Therefore, our results suggest that removing the outliers decreases the magnitude of education return on wages and its significance. This is in line with the paper "Returns to education: Evidence from UK twins: A comment."
+
+ii.)
+The interpretation of the coefficients does not change, a 1-year increase in education difference increases wages by approximately 2.8% (OLS). However, the coefficient has become insignificant and can no longer be interpreted as a casual relationship between earnings and education. It seems that most of the variance in education is driven by outliers with a large wage difference, after removing them the reduced variance causes the standard error to increase, resulting in an insignificant coefficient.
+
+iii.)
+Dropping the outliers decreases the variance in $dlnearn$. Many twins might already be earning a similar wage. Therefore, outliers are variable observations which add to the variance in earnings differences between twins. If such differences are driven by a difference in education, they confirm the causal effect which the authors want to prove.
+
+We can check whether this is the case by looking at the outliers:
+```{r}
+dplyr::filter(BCHHS_wide, absearn >= 60)%>%select(c(dlnearn,absearn,dhigh,dtwihigh))
+```
+As confirmed by the data above, a difference in earnings is not always driven by a difference in education. It could be that this difference roots in different fields of occupation. Under these circumstances, it might be more sensible to remove the outliers from the data as they distort the point estimates.
 
 ## Basic Panel Data Methods
 
@@ -157,7 +298,9 @@ summary(Gasoline) #Explore the data
 ```
 
 ### (a)
+
 ### (b)
+
 ```{r}
 Gasoline <- fread('Gasoline.csv')
 #Y <- cbind(c,data=Gasoline)
