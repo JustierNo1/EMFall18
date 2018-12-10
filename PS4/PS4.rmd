@@ -47,25 +47,52 @@ if(sysinf['sysname'] == "Windows"){
 
 ### (a)
 
+First follow the hint and write down the function in level terms:
+\begin{align*}
+y_{it} &= x_{it}\beta+\alpha_i+\epsilon_{it} \\
+\log{y_{it}}&=\log{x_{it}}\beta+\log{\alpha_i}+\epsilon_{it} \\
+e^{\log{y_{it}}}&=e^{\log{x_{it}}\beta+\log{\alpha_i}+\epsilon_{it}} \\
+y_{it} &= x_{it}^{\beta} \alpha_{i} e^{\epsilon_{it}}
+\end{align*}
+
+The farmer will maximize his profit by changing the input factor $x_{it}$, therefore he maximizes his expected profit function with respect to $x_{it}$. We first find the profit function
+
 \begin{align*}
 \pi(x_{it},\alpha_{i})&=P_t(y_{it})-W_t(x_{it}) \\
-&=P_t(\beta x_{it} + \alpha_{i} + \lambda) - W_tx_{it} \tag{as $Ee^{\epsilon_{it}}=\lambda$}
+&=P_t (x_{it}^{\beta} \alpha_{i} e^{\epsilon_{it}}) - W_t x_{it}
 \end{align*}
 
-Form the profit function and maximize with respect to $x$ to solve the farmer's profit optimization problem:
+To find the expected profit function, we use the hint $\lambda=Ee^{\epsilon_{it}}$:
+\begin{align*}
+E(y_{it}|x_{it}) &= E(x_{it}^{\beta} \alpha_i e^{\epsilon_{it}})
+&= x_{it}^{\beta} \alpha_i E(e^{\epsilon_{it}}) \\
+&= x_{it}^{\beta} \alpha_i \lambda
+\end{align*}
+
+Now maximize the profit function using the hint above:
 
 \begin{align*}
-\frac{\partial \pi(x_{it},\alpha_{i})}{\partial x_{it}}=P_t \beta - W_t x_{it} &{\overset{!}{=}} 0 \tag{F.O.C.} \\
-\frac{P_t \beta}{W_t} &= x_{it}
+\max{E(\pi_{it}|x_{it}) &= E(P_t y_{it} - W_t x_{it} | x_{it})} \\
+&= P_t (x_{it}^{\beta} \alpha_{i} \lambda) - W_t x_{it}
 \end{align*}
 
-The labor demand $x_{it}$ depends on the price $P_t$, labor demand coefficient $\beta$ and wages $W_t$. Therefore, labor demand does not depend on soil quality $\alpha_i$.
+\begin{align*}
+\frac{\partial \pi_{it}}{\partial x_{it}}= \beta P_t x_{it}^{\beta-1} \alpha_i \lambda - W_t &{\overset{!}{=}} 0 \tag{F.O.C.} \\
+x_{it}^{\beta-1} &= \frac{W_t}{\beta P_t \alpha_i \lambda} \\
+x_{it} &= \left(\frac{\beta P_t \alpha_i \lambda}{W_t}\right)^{\beta-1}
+\end{align*}
 
-Economic intuition: If prices are rising, farmers should produce more (this also aligns with any basic supply function). When wages rise, the optimal output will be less. Note that at this point, $\beta$ has not yet been defined (and the farmer's production function does not need to be linear at this point, we cannot be sure it is an OLS coefficient). Nevertheless we assume that $\beta$ is some kind of input-output elasticity, a factor by how much $labor$ is turned into $output$. If this factor increases, it pays for the farmer to demand more working hours.
+
+The labor demand $x_{it}$ depends on wages $W_t$, the labor demand coefficient $\beta$, prices $P_t$, soil quality $\alpha_i$ and rainfall $\epsilon_{it}$.
+
+**Economic intuition:**
+If prices are rising, farmers should produce more (this also aligns with any basic supply function). When wages rise, the optimal output will be less. The better the soil quality and rainfall, the more working hours are required (note that here the interpretation depends on how these variables are measured). It is worth to mention that, if $\epsilon_{it} \sim N(0,1)$ then $E(\epsilon_{it})=0$ and $\lambda=1$, so rainfall in expectation does not affect labor demand.  Nevertheless we assume that $\beta$ is some kind of input-output elasticity, a factor by how much $labor$ is turned into $output$. If this factor increases, it pays for the farmer to demand more working hours.
+
+$\beta$ is an input-output elasticity, a factor by how much $labor$ is turned into $output$. Generally in labor economics, $\beta \in (0,1)$. If we assume this is the case, the lower $beta$, the more $labor$ is demanded. This makes sense as with a low elasticity, more workers are needed to achieve the same output. If $\beta=1$, $x_{it}=1$ and if $\beta>1$, $W_t$ becomes the numerator divided by $\beta P_t \alpha_i \lambda$ while the whole fraction is taken to the power of some positive number. Which means that the whole interpretation described in the paragraph above turns around (e.g. increase becomes decrease). Again, this makes sense in an economic way as in such a case with one unit of $labor$, more than one unit of $output$ is produced.
 
 ### (b)
 
-Any OLS-equation is required to be linear. However, production functions can hardly assumed to be linear. For example, it is hard to imagine that the return from additional $labor$ input remains constant at any level of $labor$, we would reason that additional $labor$ input returns decreasing marginal $output$.
+Any OLS-equation is required to be linear to recover a consistent estimate. However, production functions can hardly assumed to be linear. In the given example, the farmer chooses $x_{it}$ by a non-linear expression of $\beta,P_t, \alpha_i$ and $\lambda$. Therefore, it is likely that the assumption of linearity is violated in the case at hand.
 
 # Empirical Applications
 
@@ -75,10 +102,48 @@ Any OLS-equation is required to be linear. However, production functions can har
 BCHHS <- fread('BCHHS.csv')
 head(BCHHS) # Check the format
 BCHHS$lnearn <- log(BCHHS$earning) #create log earnings
-BCHHS$agesq <- sqrt(BCHHS$age) #create age squared
+BCHHS$agesq <- (BCHHS$age)^2 #create age squared
 dim(BCHHS) #Check length
 summary(BCHHS) #Explore the data
 ```
+
+### a)
+
+```{r, message=FALSE, warning=FALSE, results='asis'}
+Model1 = lnearn ~ highqua + age + agesq
+Model2 = lnearn ~ twihigh + age + agesq
+
+lm1 <- lm(Model1, data = BCHHS, x=TRUE)
+lm2 <- lm(Model2, data = BCHHS, x=TRUE)
+```
+```{r tab1, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lm1, lm2, title="Regression Results Earnings with and without IV", type="latex", header = FALSE,
+ align=TRUE, dep.var.labels=c("Log Wage"),
+ covariate.labels=c("Education", "Education Instrument", "Age", "Age squared"),
+ no.space=TRUE)
+```
+
+i)
+Yes, the only estimate which is identical is the coefficient on education. The discrepancy however is not serious because the estimates confirm the paper's results; an increase in education (also in the education instrument) increases earnings, an increase in age goes along with an increase in earnings and an increase in age squared causes a decrease in earnings. All estimates are still significant, pointing to a causal effect. The results also match the pattern of other research mentioned in the paper. Therefore, this discrepancy is not serious.
+
+ii)
+The constant could be interpreted as average log earnings when everything else is zero, in other words the average log earnings of newborns with zero education. Since this does not really make sense, there is no important information contained in that coefficient.
+
+iii)
+*First Model:* A one year increase in education increases earnings by approximately 7.7% (or technically, by $100(e^{\beta_2}-1)\%$, `r 100*(exp(lm1$coefficients[2])-1)`%. A one year increase in age increases earnings by approximately 7.8%. However, age has a decreasing marginal effect showed in age squared: a one-unit increase in age squared decreases earnings by approximately 0.1%. The turning point of age can be found by $-\frac{\beta_3}{2\beta_4}=40.21$, after this age the effect of age on earnings becomes negative.
+
+*Second Model:* The interpretation is the same as for the first model (with slightly different numbers), only that instead of actual education, an instrumental variable is used: a one year increase in reported education increases earnings by approximately 5.5%. The turning point is approximately half a year earlier, at 39.6 years.
+
+### b)
+
+i)
+- Measurement Error: As the authors of the study mention on page 3, 10% of variation in schooling is due to measurement   error. This especially becomes important with the fact that the measure is self-reported.
+- Omitted Variable Bias: the model wants to estimate the effect of schooling on income. However, without controls years of education could simply be a proxy for ability, as more intelligent individuals attend university and therefore have more years of education.
+
+ii)
+- Measurement Error: assuming that we have a classical measurement error, this would result in an attenuation bias of the independent variable, i.e. a positive bias (the coefficient is larger than it actually is)
+
+- OVB: Ability is likely to be positively correlated with earnings since higher skilled individuals can take more demanding jobs (hence earn more). Education will also be positively correlated with ability (see reasoning above). Therefore, the sign of the bias is positive.
 
 ## Basic Panel Data Methods
 
@@ -88,3 +153,4 @@ head(Gasoline) # Check the format
 dim(Gasoline) #Check length
 summary(Gasoline) #Explore the data
 ```
+
