@@ -2,6 +2,8 @@
 title: "Problem Set 4 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "16.12.2018"
+header-includes:
+  - \usepackage{xcolor}
 output:
   pdf_document:
     extra_dependencies: dcolumn
@@ -27,6 +29,8 @@ library(dplyr)
 library(car)
 library(sjmisc)
 library(plm)
+library(AER)
+library(ivpack)
 
 
 #install.packages("pacman")
@@ -113,29 +117,30 @@ summary(BCHHS) #Explore the data
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
 Model1 = lnearn ~ highqua + age + agesq
-Model2 = lnearn ~ twihigh + age + agesq
 
 lm1 <- lm(Model1, data = BCHHS, x=TRUE)
-lm2 <- lm(Model2, data = BCHHS, x=TRUE)
+iv1 <- ivreg(lnearn ~ highqua + age + agesq | twihigh + age + agesq, data = BCHHS, x=TRUE)
 ```
 ```{r tab1, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-stargazer(lm1, lm2, title="Regression Results Earnings with and without IV", type="latex", header = FALSE,
+stargazer(lm1, iv1, title="Regression Results Earnings with and without IV", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Log Wage"),
- covariate.labels=c("Education", "Education Instrument", "Age", "Age squared"),
+ covariate.labels=c("Education", "Age", "Age squared", "Constant"),
+ model.names = FALSE,
+ column.labels = c("OLS", "IV"),
  no.space=TRUE)
 ```
 
 i)
-Yes, the only estimate which is identical is the coefficient on education. The discrepancy however is not serious because the estimates confirm the paper's results; an increase in education (also in the education instrument) increases earnings, an increase in age goes along with an increase in earnings and an increase in age squared causes a decrease in earnings. All estimates are still significant, pointing to a causal effect. The results also match the pattern of other research mentioned in the paper. Therefore, this discrepancy is not serious.
+The estimates are equivalent to the most part (see Table 1). Any discrepancy however is not serious because the estimates confirm the paper's results; an increase in education (also in the education instrument) increases earnings, an increase in age goes along with an increase in earnings and an increase in age squared causes a decrease in earnings. All estimates are still significant, pointing to a causal effect. The results also match the pattern of other research mentioned in the paper. Therefore, this discrepancy is not serious.
 
 ii)
 The constant could be interpreted as average log earnings when everything else is zero, in other words the average log earnings of newborns with zero education. Since this does not really make sense, there is no important information contained in that coefficient.
 
 iii)
 
-*First Model:* A one year increase in education increases earnings by approximately 7.7% (or technically, by $100(e^{\beta_2}-1)\%$, `r 100*(exp(lm1$coefficients[2])-1)`%. A one year increase in age increases earnings by approximately 7.8%. However, age has a decreasing marginal effect showed in age squared: a one-unit increase in age squared decreases earnings by approximately 0.1%. The turning point of age can be found by $-\frac{\beta_3}{2\beta_4}=40.21$, after this age the effect of age on earnings becomes negative.
+*First Model:* A one year increase in education increases earnings by approximately 7.7% (or technically, by $100(e^{\beta_2}-1)\%$, `r 100*(exp(lm1$coefficients[2])-1)`%. A one year increase in age increases earnings by approximately 7.8%. However, age has a decreasing marginal effect showed in age squared: a one-unit increase in age squared decreases earnings by approximately 0.1%. The turning point of age can be found by $-\frac{\textrm{Age}}{2\textrm{Age squared}}=39$, after this age the effect of age on earnings becomes negative.
 
-*Second Model:* The interpretation is the same as for the first model (with slightly different numbers), only that instead of actual education, an instrumental variable is used: a one year increase in reported education increases earnings by approximately 5.5%. The turning point is approximately half a year earlier, at 39.6 years.
+*Second Model:* The interpretation is the same as for the first model (with slightly different numbers), only that instead of actual education, an instrumental variable is used: a one year increase in reported education increases earnings by approximately 8.7%. The turning point is one year earlier, at 38 years.
 
 ### b)
 
@@ -162,7 +167,7 @@ For relevance, both reasons can be evaluated at once: it is save to assume that 
 - OVB: the twin's estimate $highqua$ still contain the omitted variable $ability$, therefore $Cov(z_i,\epsilon_i)\neq0$ which makes the instrument endogenous. In other words, using $highqua$ as an instrument will remove the positive bias from measurement error but not the negative bias from the omitted variable $ability$.
 
 iv.)
-The coefficient of education with the endogenous measure $highqua$ is 0.077 wheras with the IV regression it decreases to 0.055. With the reasoning above, the coefficient on education of the IV is expected to increase as it should remove (at least partly) negative the measurement error but not the positive error due to the omitted $ability$. However, the coefficient changes in the other direction. The reason for this might be that that the measurement error in $twihigh$ could even be larger than in $highqua$. However, if we compare the same coefficients in the author's table, we see that the coefficient moves in the direction we expected. The coefficient however should still be positively biased by the omitted variable $ability$.
+The coefficient of education with the endogenous measure $highqua$ is 0.077 wheras with the IV regression it increases to 0.087. With the reasoning above, the coefficient on education of the IV is expected to increase as it removes (at least partly) negative the measurement error but not the positive error due to the omitted $ability$. If we compare the same coefficients in the author's table, we see that the increase in $education$ is confirmed by their results. The coefficient however should still be positively biased by the omitted variable $ability$.
 
 v.)
 
@@ -199,46 +204,43 @@ BCHHS_wide$dtwihigh <- BCHHS_wide$twihigh.1-BCHHS_wide$twihigh.2
 Generate the regressions:
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
-Model3 = dlnearn ~ dhigh + 0
-Model4 = dlnearn ~ dtwihigh + 0
-Model5 = dlnearn ~ dhigh
-Model6 = dlnearn ~ dtwihigh
+Model2 = dlnearn ~ dhigh + 0
+Model3 = dlnearn ~ dhigh
 
+lm2 <- lm(Model2, data = BCHHS_wide, x=TRUE)
+iv2 <- ivreg(dlnearn ~ dhigh + 0 | dtwihigh + 0, data = BCHHS_wide, x=TRUE)
 lm3 <- lm(Model3, data = BCHHS_wide, x=TRUE)
-lm4 <- lm(Model4, data = BCHHS_wide, x=TRUE)
-lm5 <- lm(Model5, data = BCHHS_wide, x=TRUE)
-lm6 <- lm(Model6, data = BCHHS_wide, x=TRUE)
+iv3 <- ivreg(dlnearn ~ dhigh | dtwihigh, data = BCHHS_wide, x=TRUE)
 ```
 ```{r tab3, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-stargazer(lm3, lm4, lm5, lm6, title="Regression Results Earnings within twins with and without IV", type="latex", header = FALSE,
+stargazer(lm2, iv2, lm3, iv3, title="Regression Results Earnings within twins with and without IV", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Log Wage Difference"),
+ model.names = FALSE,
  column.labels = c("OLS", "IV", "OLS", "IV"),
- covariate.labels=c("Education", "Education Instrument"),
+ covariate.labels=c("Education"),
  omit.stat=c("all"),
  no.space=TRUE)
 ```
 
 i.)
-Because the difference in age measured in years between two twins is always zero (the current record age difference between twins is 85 days, see [here](https://www.nursingschools.net/blog/2010/10/20-amazing-facts-about-twins/)). Therefore, all values for $age$ and $agesq$ would be zero and we would include a variable without any variability.
+Because the difference in age measured in years between two twins is always zero (the current record age difference between twins is 85 days, see [\textcolor{blue}{this reference}](https://www.nursingschools.net/blog/2010/10/20-amazing-facts-about-twins/)). Therefore, all values for $age$ and $agesq$ would be zero and we would include a variable without any variability.
 
 ii.)
-The constant is the average log wage difference if all $\beta$ are set to 0. The constant becomes redudant if we assume that any difference in the dependent variable can only be caused by one of the independent variables. By taking the differences between students, we control for any OVB that is caused by $ability$, as the background and genetic setting from twins is identical. Therefore, we would expect that any difference in wages can only caused by a difference in education and we construct the regression in a way the difference in wage is zero if education is also zero.
+The constant is the average log wage difference if all $\beta$ are set to 0. The constant becomes redudant if we assume that any difference in the dependent variable can only be caused by one of the independent variables. By taking the differences between twins, we control for any OVB that is caused by $ability$, as the background and genetic setting from twins are identical. Therefore, we would expect that any difference in wages can only be caused by a difference in education so we construct the regression in a way the difference in wage is zero if education is also zero.
 
-The estimated coefficient might have an insignificant effect as almost all of the factors affecting wage should be included by the independent variable education and the fact that differences between twins are used. Since we took the absolute difference in log wage, the constant should also become positive.
+The estimated coefficient might have an insignificant effect as almost all of the factors affecting wage should be included by the independent variable education and the fact that differences between twins are used. By the reasoning above the constant should also be close to zero, as most differences in wages can only be explained due to different levels of $education$.
 
-Interestingly, the coefficients are more significant than their counterparts in the pooled regression. It seems to be that, after controlling for $ability$ differences, other factors become significant and are captured in the constant. As expected, the coefficients become positive.
+As expected, the constant coefficients in Table 3 become insignificant when using differences between twins as compared to the results in the pooled regression (see Table 1). The values of the constant are also close to zero which supports the reasoning to use a model without a constant.
 
 iii.)
 By taking the difference in education between twins, differences in education can no longer be explained through $ability$ as both twins should have the same genetic ability and socio-economic background. Education is now simply the difference in school years and no longer the difference in school years and $ability$ (as it was in the pooled OLS).
 
-This directly adresses the endogeneity concern of the OVB and as expected the coefficient on education increases from 0.077 to 0.122 (in IV from 0.055 to 0.123) which confirms the expectation of a positive bias due to OVB.
+This directly adresses the endogeneity concern of the OVB and as expected the coefficient on education decreases from 0.077 to 0.039 (in IV from 0.087 to 0.078) which confirms the expectation of a positive bias due to OVB.
 
-We also note that using IV now removes the negative bias of measurement error since the coefficient of education increases in the regression with the instrumental variable.
+We also note that using IV still removes the negative bias of measurement error since the coefficient of education increases in the regression with the instrumental variable.
 
 iv.)
-Combining the within-twins and IV approach, both sources of bias (measurement error and OVB) should be removed. By using such an approach, one should receive the causal relationship between education and $dlnearn$ and the estimate can be interpreted as the return of education to earnings. Another advantage comes by comparing the OLS and IV regression; the difference between the education coefficients hints at the size of the measurement error bias.
-
-In our setting, the IV approach did not have the intended effect, it could not remove the negative bias due to measurement error in a pooled regression. In the differences-model, using an IV increases the coefficient on education only marginally, so we still assume that a measurement error is present.
+Combining the within-twins and IV approach, both sources of bias (measurement error and OVB) can be removed. By using such an approach, one should receive the causal relationship between education and $dlnearn$ and the estimate can be interpreted as the return of education to earnings. Another advantage comes by comparing the OLS and IV regression; the difference between the education coefficients hints at the size of the measurement error bias.
 
 v.)
 Taking the differences between twins should remove any ability bias as the twins have the same genetic and socio-economic background. Nevertheless, measurement error might still be a problem as there is no reason to assume that the twin's estimate of education should suffer from less measurement error than the education reported from the individual itself. The estimates are certainly more credible than the ones from a pooled OLS, however to obtain the true causal effect of education it is necessary to use a variable that does not suffer from measurement error.
@@ -256,15 +258,16 @@ nrow(BCHHS_wide)-nrow(BCHHS_wide_no_outliers)
 Run the regressions:
 
 ```{r, message=FALSE, warning=FALSE, results='asis'}
-Model7 = dlnearn ~ dhigh + 0
+Model4 = dlnearn ~ dhigh + 0
 Model8 = dlnearn ~ dtwihigh + 0
 
-lm7 <- lm(Model3, data = BCHHS_wide_no_outliers, x=TRUE)
-lm8 <- lm(Model4, data = BCHHS_wide_no_outliers, x=TRUE)
+lm4 <- lm(Model4, data = BCHHS_wide_no_outliers, x=TRUE)
+iv4 <- ivreg(dlnearn ~ dhigh + 0 | dtwihigh + 0, data = BCHHS_wide_no_outliers, x=TRUE)
 ```
 ```{r tab4, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-stargazer(lm7, lm8, title="Regression Results Earnings without outliers", type="latex", header = FALSE,
+stargazer(lm4, iv4, title="Regression Results Earnings without outliers", type="latex", header = FALSE,
  align=TRUE, dep.var.labels=c("Log Wage Difference"),
+ model.names = FALSE,
  column.labels = c("OLS", "IV"),
  covariate.labels=c("Education", "Education Instrument"),
  omit.stat=c("all"),
@@ -272,15 +275,15 @@ stargazer(lm7, lm8, title="Regression Results Earnings without outliers", type="
 ```
 
 i.)
-The coefficients decrease from 0.039 to 0.028 (OLS) and from -0.053 to -0.025, hence the magnitude decreases. Also, while the estimates were significant at the 10 (OLS) and 5 (IV) percent level, both OLS and IV are now not significant at the 10 percent level.
+The coefficients decrease from 0.039 to 0.028 (OLS) and from 0.077 to 0.036, hence the magnitude decreases. Also, while the estimates were significant at the 10 (OLS) and 5 (IV) percent level, both OLS and IV are now not significant at the 10 percent level.
 
 Therefore, our results suggest that removing the outliers decreases the magnitude of education return on wages and its significance. This is in line with the paper "Returns to education: Evidence from UK twins: A comment."
 
 ii.)
-The interpretation of the coefficients does not change, a 1-year increase in education difference increases wages by approximately 2.8% (OLS). However, the coefficient has become insignificant and can no longer be interpreted as a casual relationship between earnings and education. It seems that most of the variance in education is driven by outliers with a large wage difference, after removing them the reduced variance causes the standard error to increase, resulting in an insignificant coefficient.
+The interpretation of the coefficients does not change except for the numbers, a 1-year increase in education difference increases wages by approximately 2.8% (OLS). However, the coefficient has become insignificant and can no longer be interpreted as a casual relationship between earnings and education. It seems that most of the variance in education is driven by outliers with a large wage difference, after removing them the reduced variance causes the standard error to increase (relative to the coefficient), resulting in an insignificant coefficient.
 
 iii.)
-Dropping the outliers decreases the variance in $dlnearn$. Many twins might already be earning a similar wage. Therefore, outliers are variable observations which add to the variance in earnings differences between twins. If such differences are driven by a difference in education, they confirm the causal effect which the authors want to prove.
+Dropping the outliers decreases the variance in $dlnearn$. Many twins might already be earning a similar wage. Therefore, outliers are valuable observations which add to the variance in earnings differences between twins. If such differences are driven by a difference in education, they confirm the causal effect which the authors want to prove.
 
 We can check whether this is the case by looking at the outliers:
 ```{r}
@@ -298,19 +301,12 @@ summary(Gasoline) #Explore the data
 ```
 
 ### (a)
-<<<<<<< HEAD
 $ln\left(\dfrac{Gas}{Car}\right)_{it}$ is the gasoline consume per car in the 18 OECD countries over the 19 years. The variables $ln\left(\dfrac{Y}{N}\right)_{it}$  (per capita income) and $ln\left(\dfrac{P_{MG}}{P_{GDP}}\right)_{it}$ (gasoline price) are relevant because they reflect the utilization of autos. In specific, countries with an higher per capita incame use the car more because they can afford to own a car and to use it often. On the other hand, in countries with lower income per capita people will prefer to use the cheaper transportation means when possible. Thus, a positive sign is expected for this variable.[^1] The last variable $ln\left(\dfrac{Car}{N}\right)_{it}$ captures the stock of cars per capita. The rising stock of cars per capita is likely to lead to reduced auto utilization. This is pretta intuitive: (using the same example of the autors of the paper) the two-car family does not drive twice the miles of a one-car family.
 
 [^1]:However, it might be possible to have a negative sign. Assuming that countries with an higher income pro capita have better public transport and more urbanized city centers -e.g Switzerland- people will be more willing to use more public transportations or bike to avoid traffic jam. Thus, the gasoline consume decreases with the increase with the increase of income per capita. 
 
 ### (b)
 ```{r results='hide'}
-=======
-
-### (b)
-
-```{r}
->>>>>>> 240d130582d14c0e820434b313f191a352eae754
 Gasoline <- fread('Gasoline.csv')
 #Y <- cbind(c,data=Gasoline)
 #X <- cbind(y,p,car,data=Gasoline)
