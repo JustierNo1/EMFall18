@@ -5,10 +5,10 @@ date: "16.12.2018"
 header-includes:
   - \usepackage{xcolor}
 output:
-  pdf_document:
-    extra_dependencies: dcolumn
   html_document:
     df_print: paged
+  pdf_document:
+    extra_dependencies: dcolumn
 ---
 
 ```{r global options, include=FALSE}
@@ -34,7 +34,7 @@ library(ivpack)
 
 
 #install.packages("pacman")
-#pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr,car,sjmisc,plm) 
+#pacman::p_load(knitr, Cairo, extrafont,latex2exp,readstata13,Hmisc,lmtest,stargazer,kableExtra,ggplot2,data.table,tidyr,formatR,dplyr,car,sjmisc,plm,AER,ivpack) 
 
 
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE,fig.show = "hold", collapse = TRUE, tidy.opts=list(width.cutoff=60),tidy=TRUE)
@@ -99,6 +99,21 @@ $\beta$ is an input-output elasticity, a factor by how much $labor$ is turned in
 ### (b)
 
 Any OLS-equation is required to be linear to recover a consistent estimate. However, production functions can hardly assumed to be linear. In the given example, the farmer chooses $x_{it}$ by a non-linear expression of $\beta,P_t, \alpha_i$ and $\lambda$. Therefore, it is likely that the assumption of linearity is violated in the case at hand.
+
+### (b) - Carmine
+It is possible to recover a consistent estimate for $\beta$ running a pooled OLS only under the assumption of *uncorrelated effects* ($Cov(x_{it}, \alpha_i)=0$) for each $t=1,..,T$. Formally, the Contemporaneous Exogeneity should be fulfilled as well, but we will assume it is the case given that "$\epsilon_{it}$ is iid and independent of
+everything in the model." As seen and demonstrated in 1.a the farmer will maximize its profit by choosing the number of workers also given the quality of the soil (\alpha_i) - e.g. less people if the soil has an high quality. Therefore, it is likely that the assumption of linearity is violated in the case at hand.
+
+### (c)
+### (d)
+i) Random Effects:
+- *Strict Exogeneity* -> $Cov(x_{it}, \epsilon_{it})=0$ for each $s,t=1,..,T$
+- *uncorrelated effects* -> $Cov(x_{it}, \alpha_i)=0$) for each $t=1,..,T$.
+ii) Fixed Effects:
+- *Strict Exogeneity* -> $Cov(x_{it}, \epsilon_{it})=0$ for each $s,t=1,..,T$
+- *Arbitrary Effects* -> relationship between $\alpha_i$ and $x_{it}$ is completely unrestricted
+iii) First Differences:
+- $Cov(\Delta x_{it})$
 
 # Empirical Applications
 
@@ -318,8 +333,8 @@ pdata <- pdata.frame(Gasoline, index=c("co","year"))
 pooling <- plm(c ~ y+p+car, data=pdata, model= "pooling")
 
 ```
-```{r}
-stargazer(pooling, type="text", title="Pooled OLS Results",
+```{r tab5, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(pooling, type="latex", title="Pooled OLS Results",
           dep.var.labels=c("Gas per car consumption"),
           covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE)
 ```
@@ -389,8 +404,8 @@ fixed <- plm(c ~ y+p+car, data=pdata, model= "within")
 random <- plm(c ~ y+p+car, data=pdata, model= "random")
 ```
 
-```{r}
-stargazer(pooling, lsdv.model,fixed, random, type="text", title="Comparison of Results",
+```{r tab6, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(pooling, lsdv.model,fixed, random, type="latex", title="Comparison of Results",
           dep.var.labels=c("Gas per car consumption"),
           covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE)
 ```
@@ -428,8 +443,10 @@ lsdv.model <- lm(c ~ y+p+car + as.factor(co), data=pdata, na.action=na.omit)
 summary(lsdv.model)
 
 
-stargazer(pooling, lsdv.model,fixed, type="text", title="Pooled OLS Results",
+```
+
+```{r tab7, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(pooling, lsdv.model,fixed, type="latex", title="Pooled OLS Results",
           dep.var.labels=c("Gas per car consumption"),
           covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE)
 ```
-
