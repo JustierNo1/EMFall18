@@ -5,10 +5,10 @@ date: "16.12.2018"
 header-includes:
   - \usepackage{xcolor}
 output:
-  html_document:
-    df_print: paged
   pdf_document:
     extra_dependencies: dcolumn
+  html_document:
+    df_print: paged
 ---
 
 ```{r global options, include=FALSE}
@@ -97,23 +97,30 @@ If prices are rising, farmers should produce more (this also aligns with any bas
 $\beta$ is an input-output elasticity, a factor by how much $labor$ is turned into $output$. Generally in labor economics, $\beta \in (0,1)$. If we assume this is the case, the lower $beta$, the more $labor$ is demanded. This makes sense as with a low elasticity, more workers are needed to achieve the same output. If $\beta=1$, $x_{it}=1$ and if $\beta>1$, $W_t$ becomes the numerator divided by $\beta P_t \alpha_i \lambda$ while the whole fraction is taken to the power of some positive number. Which means that the whole interpretation described in the paragraph above turns around (e.g. increase becomes decrease). Again, this makes sense in an economic way as in such a case with one unit of $labor$, more than one unit of $output$ is produced.
 
 ### (b)
-
-Any OLS-equation is required to be linear to recover a consistent estimate. However, production functions can hardly assumed to be linear. In the given example, the farmer chooses $x_{it}$ by a non-linear expression of $\beta,P_t, \alpha_i$ and $\lambda$. Therefore, it is likely that the assumption of linearity is violated in the case at hand.
-
-### (b) - Carmine
 It is possible to recover a consistent estimate for $\beta$ running a pooled OLS only under the assumption of *uncorrelated effects* ($Cov(x_{it}, \alpha_i)=0$) for each $t=1,..,T$. Formally, the Contemporaneous Exogeneity should be fulfilled as well, but we will assume it is the case given that "$\epsilon_{it}$ is iid and independent of
-everything in the model." As seen and demonstrated in 1.a the farmer will maximize its profit by choosing the number of workers also given the quality of the soil (\alpha_i) - e.g. less people if the soil has an high quality. Therefore, it is likely that the assumption of linearity is violated in the case at hand.
+everything in the model." As seen and demonstrated in 1.a the farmer will maximize its profit by choosing the number of workers also given the quality of the soil ($\alpha_i$) - e.g. less people if the soil has an high quality. Therefore, it is likely that the assumption of linearity is violated in the case at hand.
 
 ### (c)
+
 ### (d)
-i) Random Effects:
+i) Random Effects (RE):
 - *Strict Exogeneity* -> $Cov(x_{it}, \epsilon_{it})=0$ for each $s,t=1,..,T$
-- *uncorrelated effects* -> $Cov(x_{it}, \alpha_i)=0$) for each $t=1,..,T$.
-ii) Fixed Effects:
+- *Uncorrelated effects* -> $Cov(x_{it}, \alpha_i)=0$) for each $t=1,..,T$.
+ii) Fixed Effects (FE):
 - *Strict Exogeneity* -> $Cov(x_{it}, \epsilon_{it})=0$ for each $s,t=1,..,T$
 - *Arbitrary Effects* -> relationship between $\alpha_i$ and $x_{it}$ is completely unrestricted
-iii) First Differences:
-- $Cov(\Delta x_{it})$
+iii) First Differences (FD):
+- $Cov(\Delta x_{it}\Delta \epsilon_{it})=0  \quad t=2,...,T$ (similar condition to FE, but weaker than Strict Exogeneity)
+- *Arbitrary Effects* -> relationship between $\alpha_i$ and $x_{it}$ is completely unrestricted
+
+In the example at hand - as already mentioned in 1.b - the condition of uncorrelated effects is unlikely to hold, thus is more reasonable to assume arbitrary effects will take place. ON the other hand, we are assuming that "$\epsilon_{it}$ is iid and independent of everything in the model" which makes possible for the strict exogeneity to take place. All this taken in consideration, a consistent estimate would be either FE or FD. However, FE would be a more effecient estimator given that Strict Exogeneity assumption holds. 
+
+### (e)
+The deligned estimation strategy in 1.c works because we are taking out the time effects from the regression, which leaves us with a normal OLS. 
+Using the fixed effects is a good idea in this example because it ensures that Arbitrary Effects are present, avoiding that fixed terms such as $\alpha_i$ enter the error term which causes a bias in the estimator. With the FE, we are differencing out the term of out estimating equation, which allows our regression to predict a consistent estimator for $x_{it}$ - even thoght the $\alpha_i$ is part of the farmer's profit maximization problem.
+
+### (f)
+Since we are using FE to deal with the problem of correlation between quality soil and number of workers, thus we only rely on variation within individuals over time to identify $\beta$.However, taking in cosideration that with rain forecast we have an heterogenity problem with the variable $x_{it}$ which makes null the assumption of Strict Exogeneity. The "easy fix" to this problem is to restablish by using an IV. 
 
 # Empirical Applications
 
@@ -388,61 +395,45 @@ In case the unobserved factor is how strong the driving culture in a country:
 - $\hat\beta_{\alpha-on-X}$ will be positive -> the stronger the driving culture, the more people will drive. This leads to an higher demand for gasoline which will raise the price of the gasoline. 
 
 ###(e)
-####(e.i) The LSDV EStimator
+i) The LSDV EStimator
 ```{r}
 # LSDV Model
 lsdv.model <- lm(c ~ y+p+car + as.factor(co), data=pdata, na.action=na.omit)
 ```
-####(e.ii) Fixed Effects
+The coefficients are different. In particular, the pro capita income coefficient is smaller, meanhile the other two are increasing. This result was exected as stated in 2.c: the uncorrelated effects assumption is not likely to be fulfilled, thus the pooled estimator is not consistent. 
+
+ii) Fixed Effects
 ```{r}
 # Fixed effects or within estimator
 fixed <- plm(c ~ y+p+car, data=pdata, model= "within")
 ```
-####(e.iii) Random Effects
+The FE and the LSDV Estimator are both demeaning the data (in different ways) and they are equivelent ways (for the case at hand) to deal with unobserved heterogeneity. Thus, it is not a surprise that the betas estimated are the same and that they differ in the same way as stated in 2.e.i if compared to the results in 2.b
+
+iii) Random Effects
 ```{r}
 # Random effects estimator
 random <- plm(c ~ y+p+car, data=pdata, model= "random")
 ```
+
+###(f)
+i) The OLS estimator is telling us that the relationship between gas prices and gas consumption is negative: the more the price increase, the less the consumption. Analyzing the results, the estimator is rather big, suggesting that the price elasticity for gasoline is relatively elastic, which does seem to be the case. It would mean that for every additional standard deviation of the price, the gasoline consume per car would decrease by almost 90%.
+ii) Yes, the results seem to confirm the concerns on the endogeneity bias. In fact, when using the FE estimator the coefficient drops by more than haf - from -0.892 to -0.322.
+
+###(g)
+```{r}
+# Classi Hausman test (fixed versus random effects model)
+phtest(c ~ y+p+car, data=pdata, method = "chisq")
+
+# robust Hausman test (regression-based)
+phtest(c ~ y+p+car, data=pdata, method = "aux", vcov = vcovHC)
+
+```
+The results show that the coefficient estimates are not the same in both the models, so the random effects assumption is not viable in this setting. The Radom effect estimator uses the GLS estimator, a more efficient estimator than OLS when there is heteroskedasticity and/or serial correlation and/or clustering in the error term. The assumptions for this estimator are strict exogeneity and uncorrelated effects, thus it shouldn't surprise us that it is not viable because we already deligned in 2.c that uncorrelated effects assumption is not likely to be fulfilled. 
 
 ```{r tab6, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 stargazer(pooling, lsdv.model,fixed, random, type="latex", title="Comparison of Results",
           dep.var.labels=c("Gas per car consumption"),
           covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE)
-```
-
-
-```{r, include=FALSE}
-
-# Between estimator
-between <- plm(c ~ y+p+car, data=pdata, model= "between")
-summary(between)
-
-# First differences estimator
-firstdiff <- plm(c ~ y+p+car, data=pdata, model= "fd")
-summary(firstdiff)
-
-# Fixed effects or within estimator
-fixed <- plm(c ~ y+p+car, data=pdata, model= "within")
-summary(fixed)
-
-# Random effects estimator
-random <- plm(c ~ y+p+car, data=pdata, model= "random")
-summary(random)
-
-# LM test for random effects versus OLS
-plmtest(pooling)
-
-# LM test for fixed effects versus OLS
-pFtest(fixed, pooling)
-
-# Hausman test for fixed versus random effects model
-phtest(random, fixed)
-
-# LSDV Model
-lsdv.model <- lm(c ~ y+p+car + as.factor(co), data=pdata, na.action=na.omit)
-summary(lsdv.model)
-
-
 ```
 
 ```{r tab7, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
