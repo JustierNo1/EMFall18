@@ -2,13 +2,13 @@
 title: "Problem Set 4 Empirical Methods"
 author: "Patrick Glettig (13-252-143), Carmine Ragone (14-995-021)"
 date: "16.12.2018"
-header-includes:
-  - \usepackage{xcolor}
 output:
   pdf_document:
     extra_dependencies: dcolumn
+  word_document: default
   html_document:
     df_print: paged
+header-includes: \usepackage{xcolor}
 ---
 
 ```{r global options, include=FALSE}
@@ -101,6 +101,8 @@ It is possible to recover a consistent estimate for $\beta$ running a pooled OLS
 everything in the model." As seen and demonstrated in 1.a the farmer will maximize its profit by choosing the number of workers also given the quality of the soil ($\alpha_i$) - e.g. less people if the soil has an high quality. Therefore, it is likely that the assumption of linearity is violated in the case at hand.
 
 ### (c)
+Given that now the sample is reduced to only T=1 period of data. A consistent estimation strategy is: $y_i = $
+
 
 ### (d)
 i) Random Effects (RE):
@@ -415,9 +417,17 @@ iii) Random Effects
 random <- plm(c ~ y+p+car, data=pdata, model= "random")
 ```
 
+A comparison table of the 3 different estimators is located in the Appendix under as Table 7. The first specification is the LSDV EStimator, the second the FE and the thrid is the RE. 
+
 ###(f)
 i) The OLS estimator is telling us that the relationship between gas prices and gas consumption is negative: the more the price increase, the less the consumption. Analyzing the results, the estimator is rather big, suggesting that the price elasticity for gasoline is relatively elastic, which does seem to be the case. It would mean that for every additional standard deviation of the price, the gasoline consume per car would decrease by almost 90%.
 ii) Yes, the results seem to confirm the concerns on the endogeneity bias. In fact, when using the FE estimator the coefficient drops by more than haf - from -0.892 to -0.322.
+
+```{r tab6, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(pooling,fixed, type="latex", title="Pooled OLS vs Fixed Effects Results",
+          dep.var.labels=c("Gas per car consumption"),
+          covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE, header = FALSE, model.names = FALSE, no.space= TRUE )
+```
 
 ###(g)
 ```{r}
@@ -430,14 +440,12 @@ phtest(c ~ y+p+car, data=pdata, method = "aux", vcov = vcovHC)
 ```
 The results show that the coefficient estimates are not the same in both the models, so the random effects assumption is not viable in this setting. The Radom effect estimator uses the GLS estimator, a more efficient estimator than OLS when there is heteroskedasticity and/or serial correlation and/or clustering in the error term. The assumptions for this estimator are strict exogeneity and uncorrelated effects, thus it shouldn't surprise us that it is not viable because we already deligned in 2.c that uncorrelated effects assumption is not likely to be fulfilled. 
 
-```{r tab6, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-stargazer(pooling, lsdv.model,fixed, random, type="latex", title="Comparison of Results",
+
+## Appendix
+```{r tab7, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+stargazer(lsdv.model,fixed, random, type="latex", title="Comparison of Estimators",
           dep.var.labels=c("Gas per car consumption"),
-          covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE)
+          covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE, header = FALSE, model.names = FALSE, no.space= TRUE )
+
 ```
 
-```{r tab7, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-stargazer(pooling, lsdv.model,fixed, type="latex", title="Pooled OLS Results",
-          dep.var.labels=c("Gas per car consumption"),
-          covariate.labels=c("Per capita income", "Gasoline price","Cars per capita"), align=TRUE)
-```
