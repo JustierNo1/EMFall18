@@ -101,7 +101,8 @@ It is possible to recover a consistent estimate for $\beta$ running a pooled OLS
 everything in the model." As seen and demonstrated in 1.a the farmer will maximize its profit by choosing the number of workers also given the quality of the soil ($\alpha_i$) - e.g. less people if the soil has an high quality. Therefore, it is likely that the assumption of linearity is violated in the case at hand.
 
 ### (c)
-Given that now the sample is reduced to only T=1 period of data. A consistent estimation strategy is: $y_i = $
+Given that now the sample is reduced to only T=1 period of data. A consistent estimation strategy is: $y_i = x_i \beta + \alpha_i + \epsilon_i$ because now we don't need to worry anymore about the unobserved hetetogenity between time. However, as in every OLS the classical assumptions should hold - especially the assumption 2. Since, price and wage are enter the maximation problem of the farmer they can be useful to estimate the true effect of labor on the output. It is possible by multipling $x_i$ per $\left(\dfrac{W_1}{P_1}\right) ^{\beta-1}$
+In case there was the possibility to have another varible, a good option would be to have a measure for the tecnology used, since they play a big role in the agricutural field.
 
 
 ### (d)
